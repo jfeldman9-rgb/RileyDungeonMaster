@@ -41,6 +41,7 @@ func _check_enemy_hits() -> void:
 			continue
 		hits += 1
 		_add_score(10)
+		_spawn_hit_pop(enemy_3d.global_position + Vector3.UP * 0.65)
 		enemy_3d.queue_free()
 		if hits >= pierce_targets:
 			queue_free()
@@ -71,3 +72,25 @@ func _add_score(amount: int) -> void:
 		var state := get_node("/root/GameState")
 		if state.has_method("add_score"):
 			state.call("add_score", amount)
+
+
+func _spawn_hit_pop(origin: Vector3) -> void:
+	var ring := MeshInstance3D.new()
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.24
+	ring_mesh.outer_radius = 0.29
+	ring_mesh.ring_segments = 28
+	ring.mesh = ring_mesh
+	ring.global_position = origin
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.55, 0.85, 1.0, 0.76)
+	material.emission_enabled = true
+	material.emission = Color(0.35, 0.75, 1.0)
+	material.emission_energy_multiplier = 0.95
+	ring.material_override = material
+	get_tree().current_scene.add_child(ring)
+	var tween := ring.create_tween()
+	tween.tween_property(ring, "scale", Vector3(2.4, 2.4, 2.4), 0.2)
+	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.2)
+	tween.finished.connect(ring.queue_free)

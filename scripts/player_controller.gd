@@ -150,6 +150,7 @@ func _apply_slice_hit() -> void:
 			continue
 		if facing_direction.dot(to_enemy.normalized()) < slice_arc_dot:
 			continue
+		_spawn_hit_pop(enemy_3d.global_position + Vector3.UP * 0.65)
 		enemy_3d.queue_free()
 		_add_score(15)
 		break
@@ -241,3 +242,26 @@ func _add_score(amount: int) -> void:
 		var state := get_node("/root/GameState")
 		if state.has_method("add_score"):
 			state.call("add_score", amount)
+
+
+func _spawn_hit_pop(origin: Vector3) -> void:
+	var ring := MeshInstance3D.new()
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.32
+	ring_mesh.outer_radius = 0.37
+	ring_mesh.ring_segments = 30
+	ring.mesh = ring_mesh
+	ring.global_position = origin
+	ring.look_at(origin + Vector3.UP, Vector3.FORWARD)
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.55, 1.0, 0.45, 0.78)
+	material.emission_enabled = true
+	material.emission = Color(0.35, 1.0, 0.25)
+	material.emission_energy_multiplier = 1.0
+	ring.material_override = material
+	get_tree().current_scene.add_child(ring)
+	var tween := ring.create_tween()
+	tween.tween_property(ring, "scale", Vector3(3.0, 3.0, 3.0), 0.22)
+	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.22)
+	tween.finished.connect(ring.queue_free)
