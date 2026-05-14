@@ -35,6 +35,7 @@ var boss_active := false
 var boss_shield_hp := 5
 var kenzie_avatar: Node3D
 var kenzie_shield: Node3D
+var water_segments: Array[MeshInstance3D] = []
 
 
 func _ready() -> void:
@@ -68,6 +69,7 @@ func _process(delta: float) -> void:
 	_update_region_label()
 	_check_tower_reached()
 	_update_boss_visuals(delta)
+	_update_water(delta)
 
 
 func _build_seal_pickups() -> void:
@@ -252,6 +254,20 @@ func _build_watercourse() -> void:
 		mat.emission_energy_multiplier = 0.16
 		water.material_override = mat
 		add_child(water)
+		water.set_meta("base_y", water.position.y)
+		water.set_meta("phase", float(i) * 0.8)
+		water_segments.append(water)
+
+
+func _update_water(_delta: float) -> void:
+	var time := Time.get_ticks_msec() * 0.001
+	for water in water_segments:
+		if not is_instance_valid(water):
+			continue
+		var base_y := float(water.get_meta("base_y", 0.05))
+		var phase := float(water.get_meta("phase", 0.0))
+		water.position.y = base_y + sin(time * 1.7 + phase) * 0.018
+		water.scale.x = 1.0 + sin(time * 0.9 + phase) * 0.025
 
 
 func _add_box(parent: Node, center: Vector3, size: Vector3, color: Color) -> void:
