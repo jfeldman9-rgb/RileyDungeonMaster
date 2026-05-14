@@ -10,6 +10,7 @@ class_name WorldChunk
 
 var generated := false
 var noise := FastNoiseLite.new()
+var torch_lights: Array[OmniLight3D] = []
 
 const STONE_TILE_A := preload("res://assets/generated/stone_tile_a.png")
 const STONE_TILE_C := preload("res://assets/generated/stone_tile_c.png")
@@ -36,6 +37,16 @@ const PATH_SEGMENTS := [
 	[Vector3(2.0, 0.0, -72.0), Vector3(-32.0, 0.0, -86.0)],
 	[Vector3(2.0, 0.0, -72.0), Vector3(22.0, 0.0, -104.0)]
 ]
+
+
+func _process(_delta: float) -> void:
+	var time := Time.get_ticks_msec() * 0.001
+	for light in torch_lights:
+		if not is_instance_valid(light):
+			continue
+		var phase := float(light.get_meta("phase", 0.0))
+		var base := float(light.get_meta("base_energy", 1.0))
+		light.light_energy = base + sin(time * 7.0 + phase) * 0.18 + sin(time * 13.0 + phase * 0.7) * 0.08
 
 
 func generate(coord: Vector2i, size: float, world_seed: int = 1337) -> void:
@@ -568,6 +579,9 @@ func _add_torch(local_pos: Vector3, color: Color) -> void:
 	light.light_color = color
 	light.light_energy = 1.8
 	light.omni_range = 7.5
+	light.set_meta("phase", randf() * TAU)
+	light.set_meta("base_energy", 1.8)
+	torch_lights.append(light)
 	add_child(light)
 
 
