@@ -16,6 +16,20 @@ This pass starts the DeepSeek architecture migration without destabilizing the c
 - `DayNightCycle` scaffold
 - `AudioManager` scaffold
 
+The project now boots into this prototype by default through `project.godot`. The original monolith scene remains at `res://scenes/main.tscn` for reference while features are migrated.
+
+## Current Gameplay Loop
+
+- Riley starts in a forest clearing.
+- The world streams terrain chunks around the player.
+- A branching path network leads to the Broken Courtyard, Moon Library, Poison Garden, Crown Crypt, bridge, and Kenzie Tower.
+- The Library, Garden, and Crypt each hold a visible seal pickup.
+- Collecting all three seals opens the Kenzie Tower gate.
+- Kenzie is visible at the distant tower as a glowing figure with a shield ring.
+- Region-aware enemy spawn zones create different placeholder enemy types by area.
+- Riley can slash, dash, and throw piercing ninja stars in the modular scene.
+- The HUD tracks health, score, current area, seal count, objective, and gate state.
+
 ## Main Scene Safety
 
 `res://scenes/main.tscn` still runs the current game. The new modular managers are attached there in inactive mode so scripts parse and stay available without replacing working gameplay yet.

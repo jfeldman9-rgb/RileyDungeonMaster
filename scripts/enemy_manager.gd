@@ -13,6 +13,7 @@ signal enemy_removed(enemy: Node3D)
 @export var spawn_interval := 2.8
 @export var enemy_move_speed := 2.2
 @export var enemy_agro_radius := 34.0
+@export var contact_damage_cooldown := 1.2
 @export var active := false
 
 var active_enemies: Array[Node3D] = []
@@ -80,6 +81,7 @@ func try_spawn_from_nearby_zone() -> void:
 	else:
 		parent.add_child(enemy)
 	enemy.global_position = random_point_near(zone.global_position, 3.5)
+	_configure_enemy_for_zone(enemy, zone.name)
 	register_enemy(enemy)
 
 
@@ -112,11 +114,25 @@ func update_enemy_motion(delta: float) -> void:
 			continue
 		var to_player := player.global_position - enemy.global_position
 		to_player.y = 0.0
+		var attack_cooldown := float(enemy.get_meta("attack_cooldown", 0.0))
+		if attack_cooldown > 0.0:
+			enemy.set_meta("attack_cooldown", maxf(0.0, attack_cooldown - delta))
+		if to_player.length() <= 1.1 and attack_cooldown <= 0.0:
+			_damage_player()
+			enemy.set_meta("attack_cooldown", contact_damage_cooldown)
 		if to_player.length() > enemy_agro_radius or to_player.length() < 0.1:
 			continue
 		var dir := to_player.normalized()
-		enemy.global_position += dir * enemy_move_speed * delta
+		var speed := float(enemy.get_meta("move_speed", enemy_move_speed))
+		enemy.global_position += dir * speed * delta
 		enemy.rotation.y = lerp_angle(enemy.rotation.y, atan2(dir.x, dir.z), minf(1.0, 9.0 * delta))
+
+
+func _damage_player() -> void:
+	if has_node("/root/GameState"):
+		var state := get_node("/root/GameState")
+		if state.has_method("damage_player"):
+			state.call("damage_player", 1)
 
 
 func make_placeholder_enemy() -> Node3D:
@@ -136,6 +152,38 @@ func make_placeholder_enemy() -> Node3D:
 	body.position.y = 0.5
 	enemy.add_child(body)
 	return enemy
+
+
+func _configure_enemy_for_zone(enemy: Node3D, zone_name: String) -> void:
+	var color := Color(0.18, 0.52, 0.16)
+	var emission := Color(0.08, 0.35, 0.08)
+	var scale := 1.0
+	var speed := enemy_move_speed
+	if "Garden" in zone_name:
+		color = Color(0.7, 0.18, 0.1)
+		emission = Color(0.45, 0.08, 0.02)
+		scale = 0.82
+		speed = enemy_move_speed * 1.35
+	elif "Library" in zone_name:
+		color = Color(0.16, 0.28, 0.74)
+		emission = Color(0.06, 0.14, 0.55)
+		scale = 0.95
+		speed = enemy_move_speed * 0.88
+	elif "Crypt" in zone_name or "Tower" in zone_name:
+		color = Color(0.33, 0.24, 0.12)
+		emission = Color(0.35, 0.2, 0.04)
+		scale = 1.35
+		speed = enemy_move_speed * 0.7
+	enemy.scale = Vector3.ONE * scale
+	enemy.set_meta("move_speed", speed)
+	var body := enemy.find_child("*", false, false) as MeshInstance3D
+	if body:
+		var material := body.material_override as StandardMaterial3D
+		if material:
+			material = material.duplicate()
+			material.albedo_color = color
+			material.emission = emission
+			body.material_override = material
 
 
 func random_point_near(center: Vector3, radius: float) -> Vector3:

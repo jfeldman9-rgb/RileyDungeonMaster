@@ -37,6 +37,8 @@ func _ready() -> void:
 		state = get_node("/root/GameState")
 		if state.has_method("reset_run"):
 			state.call("reset_run")
+		if state.has_signal("player_died"):
+			state.player_died.connect(_on_player_died)
 	_build_seal_pickups()
 	_build_distant_kenzie_tower()
 	_build_kenzie_gate()
@@ -235,3 +237,14 @@ func _make_emissive_material(color: Color, energy: float) -> StandardMaterial3D:
 	material.emission = color
 	material.emission_energy_multiplier = energy
 	return material
+
+
+func _on_player_died() -> void:
+	if not player:
+		return
+	player.global_position = Vector3(0.0, 2.5, 14.0)
+	if state and state.has_method("restore_player"):
+		state.call("restore_player")
+	if ui:
+		ui.show_message("RETURNED TO CLEARING", "Kenzie is still waiting at the tower.")
+		ui.set_objective_hint("Recover, then choose another route through the valley.")

@@ -43,6 +43,11 @@ func damage_player(amount: int) -> void:
 		player_died.emit()
 
 
+func restore_player() -> void:
+	health = max_health
+	player_damaged.emit(health)
+
+
 func collect_seal(seal_id: String) -> int:
 	if collected_seals.get(seal_id, false):
 		return seal_count()

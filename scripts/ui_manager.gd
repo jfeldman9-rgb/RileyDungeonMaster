@@ -116,6 +116,10 @@ func _on_player_damaged(_new_health: int) -> void:
 	if health_label:
 		var max_health := int(state.get("max_health")) if state else 5
 		health_label.text = "Health %d/%d" % [_new_health, max_health]
+	if _new_health <= 0:
+		show_message("RILEY DOWN", "Retreat to the clearing and try again.")
+	else:
+		show_message("HIT", "Broccoli monster got through.")
 
 
 func _on_seal_collected(seal_id: String, count: int) -> void:

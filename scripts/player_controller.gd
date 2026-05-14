@@ -24,6 +24,7 @@ enum State { IDLE, RUNNING, ATTACKING, DASHING, THROWING }
 
 var state: State = State.IDLE
 var facing_direction := Vector3.FORWARD
+var dash_direction := Vector3.FORWARD
 var dash_timer := 0.0
 var action_timer := 0.0
 var dash_trail_timer := 0.0
@@ -55,6 +56,8 @@ func _physics_process(delta: float) -> void:
 	update_state_timers(delta)
 	update_state_from_motion(input)
 	var move := camera_relative_move(input)
+	if state == State.DASHING and move.length() <= 0.05:
+		move = dash_direction
 	var speed := move_speed * (dash_speed_multiplier if state == State.DASHING else 1.0)
 	var target_velocity := move * speed
 	if state == State.ATTACKING and action_timer > attack_duration * 0.5:
@@ -116,6 +119,7 @@ func request_slice() -> void:
 
 
 func request_dash() -> void:
+	dash_direction = facing_direction
 	set_state(State.DASHING)
 	dash_timer = dash_duration
 	dash_trail_timer = 0.0
