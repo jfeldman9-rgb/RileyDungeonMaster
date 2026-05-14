@@ -45,6 +45,7 @@ func _ready() -> void:
 			state.call("reset_run")
 		if state.has_signal("player_died"):
 			state.player_died.connect(_on_player_died)
+	_build_valley_backdrop()
 	_build_seal_pickups()
 	_build_distant_kenzie_tower()
 	_build_kenzie_gate()
@@ -164,6 +165,47 @@ func _build_distant_kenzie_tower() -> void:
 	light.light_energy = 3.4
 	light.omni_range = 42.0
 	tower.add_child(light)
+
+
+func _build_valley_backdrop() -> void:
+	var ring_radius := 118.0
+	for i in range(30):
+		var angle := TAU * float(i) / 30.0
+		var radius := ring_radius + sin(float(i) * 1.73) * 16.0
+		var height := 16.0 + float(i % 7) * 2.7
+		var width := 9.0 + float(i % 5) * 2.1
+		var mountain := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = width * 0.18
+		mesh.bottom_radius = width
+		mesh.height = height
+		mesh.radial_segments = 5
+		mountain.mesh = mesh
+		mountain.position = Vector3(cos(angle) * radius, height * 0.5 - 1.0, sin(angle) * radius - 36.0)
+		mountain.rotation_degrees.y = rad_to_deg(angle) + 18.0
+		mountain.material_override = _make_emissive_material(Color(0.12, 0.13, 0.16).lerp(Color(0.22, 0.20, 0.24), float(i % 3) * 0.22), 0.02)
+		add_child(mountain)
+	_build_watercourse()
+
+
+func _build_watercourse() -> void:
+	for i in range(12):
+		var water := MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(7.0 + sin(float(i)) * 1.4, 0.035, 11.0)
+		water.mesh = mesh
+		water.position = Vector3(-22.0 + sin(float(i) * 0.7) * 8.0, 0.05, 24.0 - float(i) * 12.0)
+		water.rotation_degrees.y = -18.0 + sin(float(i) * 0.9) * 18.0
+		var mat := StandardMaterial3D.new()
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(0.08, 0.22, 0.32, 0.62)
+		mat.roughness = 0.08
+		mat.metallic = 0.3
+		mat.emission_enabled = true
+		mat.emission = Color(0.04, 0.18, 0.28)
+		mat.emission_energy_multiplier = 0.16
+		water.material_override = mat
+		add_child(water)
 
 
 func _add_box(parent: Node, center: Vector3, size: Vector3, color: Color) -> void:

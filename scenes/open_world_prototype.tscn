@@ -13,21 +13,34 @@
 
 [sub_resource type="Environment" id="Environment_open_world"]
 background_mode = 1
-background_color = Color(0.045, 0.055, 0.09, 1)
+background_color = Color(0.06, 0.068, 0.11, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.28, 0.28, 0.36, 1)
-ambient_light_energy = 0.58
+ambient_light_color = Color(0.18, 0.19, 0.28, 1)
+ambient_light_energy = 0.42
 fog_enabled = true
-fog_light_color = Color(0.32, 0.34, 0.44, 1)
-fog_density = 0.006
+fog_light_color = Color(0.38, 0.36, 0.48, 1)
+fog_density = 0.009
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.018
+volumetric_fog_albedo = Color(0.34, 0.32, 0.46, 1)
+volumetric_fog_emission = Color(0.045, 0.035, 0.08, 1)
+volumetric_fog_emission_energy = 0.35
 glow_enabled = true
-glow_intensity = 0.8
+glow_intensity = 1.25
+glow_strength = 1.15
+glow_bloom = 0.48
 ssao_enabled = true
-ssao_intensity = 2.0
+ssao_radius = 3.2
+ssao_intensity = 3.0
+ssao_power = 1.6
+adjustment_enabled = true
+adjustment_brightness = 0.96
+adjustment_contrast = 1.2
+adjustment_saturation = 1.16
 dof_blur_far_enabled = true
-dof_blur_far_distance = 42.0
-dof_blur_far_transition = 18.0
-dof_blur_amount = 0.25
+dof_blur_far_distance = 58.0
+dof_blur_far_transition = 26.0
+dof_blur_amount = 0.12
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_spawn_zone"]
 size = Vector3(24, 3, 24)
@@ -39,13 +52,17 @@ environment = SubResource("Environment_open_world")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 20, 0)
-light_energy = 1.2
+light_color = Color(1, 0.78, 0.48, 1)
+light_energy = 1.65
 shadow_enabled = true
+directional_shadow_max_distance = 180.0
+directional_shadow_fade_start = 0.72
 
 [node name="Moon" type="DirectionalLight3D" parent="."]
 visible = false
-light_color = Color(0.45, 0.55, 0.9, 1)
-light_energy = 0.32
+light_color = Color(0.36, 0.48, 1, 1)
+light_energy = 0.42
+shadow_enabled = true
 
 [node name="RileyPlayer" parent="." instance=ExtResource("1_player")]
 position = Vector3(0, 2.5, 14)

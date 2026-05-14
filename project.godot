@@ -79,6 +79,6 @@ common/physics_ticks_per_second=30
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
+renderer/rendering_method="forward_plus"
 anti_aliasing/quality/msaa_3d=2
-viewport/hdr_2d=false
+viewport/hdr_2d=true
