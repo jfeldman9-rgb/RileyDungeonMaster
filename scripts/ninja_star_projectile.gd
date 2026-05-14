@@ -40,6 +40,7 @@ func _check_enemy_hits() -> void:
 		if enemy_3d.global_position.distance_to(global_position) > 0.75:
 			continue
 		hits += 1
+		_add_score(10)
 		enemy_3d.queue_free()
 		if hits >= pierce_targets:
 			queue_free()
@@ -63,3 +64,10 @@ func _spawn_trail() -> void:
 	var tween := mote.create_tween()
 	tween.tween_property(mote, "scale", Vector3.ZERO, 0.22)
 	tween.finished.connect(mote.queue_free)
+
+
+func _add_score(amount: int) -> void:
+	if has_node("/root/GameState"):
+		var state := get_node("/root/GameState")
+		if state.has_method("add_score"):
+			state.call("add_score", amount)

@@ -145,6 +145,7 @@ func _apply_slice_hit() -> void:
 		if facing_direction.dot(to_enemy.normalized()) < slice_arc_dot:
 			continue
 		enemy_3d.queue_free()
+		_add_score(15)
 		break
 
 
@@ -190,3 +191,10 @@ func _spawn_dash_afterimage() -> void:
 	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, 0.18)
 	tween.finished.connect(ghost.queue_free)
+
+
+func _add_score(amount: int) -> void:
+	if has_node("/root/GameState"):
+		var state := get_node("/root/GameState")
+		if state.has_method("add_score"):
+			state.call("add_score", amount)
