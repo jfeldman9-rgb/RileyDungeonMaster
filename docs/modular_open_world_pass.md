@@ -30,6 +30,20 @@ The project now boots into this prototype by default through `project.godot`. Th
 - Riley can slash, dash, and throw piercing ninja stars in the modular scene.
 - The HUD tracks health, score, current area, seal count, objective, and gate state.
 
+## Visual Restoration Pass
+
+The open-world prototype now restores much of the earlier dungeon mood while keeping the freer topology:
+
+- Forward+ rendering, HDR, stronger glow, SSAO, far DOF, and procedural sky.
+- Vertex-colored rolling terrain with corrected normals.
+- Textured stone paths, ruins, rocks, banners, and painted torch sprites.
+- Separate tree trunks/crowns, denser grass, flowers, magical motes, and animated torch flicker.
+- Distant mountain silhouettes and a shimmering watercourse to remove the empty-void feeling.
+- Landmark moonbeams, crystal clusters, and colored local lighting for Library/Garden/Crypt/Tower areas.
+- Riley now has 3D head/hair/glasses/belt/sword detail, a pulsing sword light, slash FX, dash swirls, and portraits.
+- Broccoli enemies now use the generated scary sprite art with area-specific colors/glows.
+- Kenzie’s tower uses the generated Kenzie/shield art, aura particles, and animated shield visuals.
+
 ## Main Scene Safety
 
 `res://scenes/main.tscn` still runs the current game. The new modular managers are attached there in inactive mode so scripts parse and stay available without replacing working gameplay yet.
