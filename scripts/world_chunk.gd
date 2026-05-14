@@ -18,6 +18,7 @@ const STONE_TILE_C := preload("res://assets/generated/stone_tile_c.png")
 const BANNER_A := preload("res://assets/generated/banner_a.png")
 const BANNER_B := preload("res://assets/generated/banner_b.png")
 const BANNER_C := preload("res://assets/generated/banner_c.png")
+const TORCH_LANTERN := preload("res://assets/generated/torch_lantern.png")
 
 const LANDMARKS := [
 	{"name": "Starting Clearing", "kind": "clearing", "position": Vector3(0.0, 0.0, 14.0), "color": Color(0.22, 0.32, 0.13)},
@@ -592,6 +593,13 @@ func _add_crystal_cluster(local_pos: Vector3, color: Color) -> void:
 
 
 func _add_torch(local_pos: Vector3, color: Color) -> void:
+	var torch_sprite := Sprite3D.new()
+	torch_sprite.texture = TORCH_LANTERN
+	torch_sprite.pixel_size = 0.006
+	torch_sprite.position = local_pos + Vector3.UP * 0.12
+	torch_sprite.modulate = Color(1, 0.88, 0.68, 0.86)
+	torch_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	add_child(torch_sprite)
 	var holder := MeshInstance3D.new()
 	var holder_mesh := CylinderMesh.new()
 	holder_mesh.top_radius = 0.08
