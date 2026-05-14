@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://open_world_modular_prototype"]
+[gd_scene load_steps=14 format=3 uid="uid://open_world_modular_prototype"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/world_generator.gd" id="2_world"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/audio_manager.gd" id="8_audio"]
 [ext_resource type="Script" path="res://scripts/ui_manager.gd" id="9_ui"]
 [ext_resource type="Script" path="res://scripts/world_objective_manager.gd" id="10_objectives"]
+[ext_resource type="Script" path="res://scripts/visual_director.gd" id="11_visuals"]
 
 [sub_resource type="Environment" id="Environment_open_world"]
 background_mode = 1
@@ -49,6 +50,12 @@ size = Vector3(24, 3, 24)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_open_world")
+
+[node name="VisualDirector" type="Node" parent="."]
+script = ExtResource("11_visuals")
+world_environment_path = NodePath("../WorldEnvironment")
+sun_path = NodePath("../Sun")
+moon_path = NodePath("../Moon")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 20, 0)
