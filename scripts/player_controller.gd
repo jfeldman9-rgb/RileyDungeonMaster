@@ -2,6 +2,8 @@ extends CharacterBody3D
 class_name PlayerController
 
 const NinjaStarProjectileScript := preload("res://scripts/ninja_star_projectile.gd")
+const SLASH_FX := preload("res://assets/generated/slash_fx.png")
+const DASH_SWIRL := preload("res://assets/generated/dash_swirl.png")
 
 signal slice_requested
 signal dash_requested
@@ -134,6 +136,7 @@ func request_star() -> void:
 
 
 func _apply_slice_hit() -> void:
+	_spawn_slash_fx()
 	for enemy in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(enemy) or not enemy is Node3D:
 			continue
@@ -191,6 +194,32 @@ func _spawn_dash_afterimage() -> void:
 	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, 0.18)
 	tween.finished.connect(ghost.queue_free)
+	var swirl := Sprite3D.new()
+	swirl.texture = DASH_SWIRL
+	swirl.pixel_size = 0.01
+	swirl.global_position = global_position + Vector3.UP * 0.18 - facing_direction * 0.35
+	swirl.rotation_degrees.x = -90.0
+	swirl.modulate = Color(0.55, 0.86, 1.0, 0.42)
+	get_tree().current_scene.add_child(swirl)
+	var swirl_tween := swirl.create_tween()
+	swirl_tween.tween_property(swirl, "scale", Vector3(1.7, 1.7, 1.7), 0.2)
+	swirl_tween.parallel().tween_property(swirl, "modulate:a", 0.0, 0.2)
+	swirl_tween.finished.connect(swirl.queue_free)
+
+
+func _spawn_slash_fx() -> void:
+	var slash := Sprite3D.new()
+	slash.texture = SLASH_FX
+	slash.pixel_size = 0.0085
+	slash.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	slash.global_position = global_position + Vector3.UP * 0.95 + facing_direction * 0.9
+	slash.rotation.y = atan2(facing_direction.x, facing_direction.z)
+	slash.modulate = Color(0.55, 0.9, 1.0, 0.86)
+	get_tree().current_scene.add_child(slash)
+	var tween := slash.create_tween()
+	tween.tween_property(slash, "scale", Vector3(1.65, 1.65, 1.65), 0.16)
+	tween.parallel().tween_property(slash, "modulate:a", 0.0, 0.16)
+	tween.finished.connect(slash.queue_free)
 
 
 func _add_score(amount: int) -> void:
