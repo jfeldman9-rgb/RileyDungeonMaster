@@ -80,6 +80,7 @@ active = true
 player_path = NodePath("../RileyPlayer")
 load_radius = 2
 unload_radius = 3
+max_chunk_loads_per_refresh = 9
 lod_manager_path = NodePath("../LODManager")
 
 [node name="ObjectPool" type="Node" parent="."]
