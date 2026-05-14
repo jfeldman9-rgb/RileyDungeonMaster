@@ -1,6 +1,9 @@
 extends Control
 class_name UIManager
 
+const RILEY_PORTRAIT := preload("res://assets/generated/riley_portrait.png")
+const KENZIE_PORTRAIT := preload("res://assets/generated/kenzie_portrait.png")
+
 @export var state_path: NodePath
 
 var state: Node
@@ -124,6 +127,30 @@ func _build_story_panel() -> void:
 	story_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	story_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(story_body)
+	_build_portraits()
+
+
+func _build_portraits() -> void:
+	var portrait := TextureRect.new()
+	portrait.name = "RileyPortrait"
+	portrait.texture = RILEY_PORTRAIT
+	portrait.position = Vector2(18, 146)
+	portrait.custom_minimum_size = Vector2(74, 74)
+	portrait.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	add_child(portrait)
+	var kenzie := TextureRect.new()
+	kenzie.name = "KenziePortrait"
+	kenzie.texture = KENZIE_PORTRAIT
+	kenzie.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	kenzie.offset_left = -92
+	kenzie.offset_right = -18
+	kenzie.offset_top = 18
+	kenzie.offset_bottom = 92
+	kenzie.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	kenzie.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	kenzie.modulate = Color(1.0, 0.85, 1.0, 0.86)
+	add_child(kenzie)
 
 
 func show_message(_title: String, _subtitle: String = "") -> void:
