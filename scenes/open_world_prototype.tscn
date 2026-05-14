@@ -125,6 +125,7 @@ script = ExtResource("5_daynight")
 active = true
 sun_path = NodePath("../Sun")
 moon_path = NodePath("../Moon")
+follow_target_path = NodePath("../RileyPlayer")
 
 [node name="AudioManager" type="Node" parent="."]
 script = ExtResource("8_audio")
