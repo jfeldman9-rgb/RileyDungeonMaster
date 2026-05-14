@@ -81,6 +81,13 @@ func _create_default_rain() -> void:
 	rain_particles.process_material = process
 	var drop := BoxMesh.new()
 	drop.size = Vector3(0.025, 0.85, 0.025)
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.55, 0.72, 1.0, 0.42)
+	material.emission_enabled = true
+	material.emission = Color(0.22, 0.42, 0.8)
+	material.emission_energy_multiplier = 0.18
+	drop.material = material
 	rain_particles.draw_pass_1 = drop
 	rain_particles.emitting = false
 	add_child(rain_particles)
