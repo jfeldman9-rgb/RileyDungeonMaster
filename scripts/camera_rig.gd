@@ -18,6 +18,13 @@ var camera: Camera3D
 func _ready() -> void:
 	target = get_node_or_null(target_path) as Node3D
 	camera = find_child("Camera3D", true, false) as Camera3D
+	if target and camera:
+		var forward := Vector3(sin(yaw), 0.0, -cos(yaw)).normalized()
+		var portrait := get_viewport().get_visible_rect().size.y > get_viewport().get_visible_rect().size.x
+		var distance := follow_distance + (portrait_distance_bonus if portrait else 0.0)
+		var height := follow_height + (portrait_height_bonus if portrait else 0.0)
+		global_position = target.global_position - forward * distance + Vector3.UP * height
+		camera.look_at(target.global_position + forward * look_ahead + Vector3.UP)
 
 
 func _process(delta: float) -> void:

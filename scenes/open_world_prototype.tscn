@@ -48,6 +48,7 @@ light_color = Color(0.45, 0.55, 0.9, 1)
 light_energy = 0.32
 
 [node name="RileyPlayer" parent="." instance=ExtResource("1_player")]
+position = Vector3(0, 2.5, 14)
 
 [node name="World" type="Node3D" parent="."]
 script = ExtResource("2_world")

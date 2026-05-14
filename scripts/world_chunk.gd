@@ -64,7 +64,7 @@ func sample_height(local_x: float, local_z: float) -> float:
 func _build_terrain() -> void:
 	var terrain := MeshInstance3D.new()
 	terrain.mesh = _make_terrain_mesh()
-	terrain.material_override = _make_material(Color(0.055, 0.095, 0.06), 0.9)
+	terrain.material_override = _make_material(Color(0.18, 0.28, 0.13), 0.9)
 	add_child(terrain)
 	terrain.create_trimesh_collision()
 
