@@ -1,6 +1,11 @@
 extends Node
 class_name EnemyManager
 
+const BROCCOLI_BRUTE := preload("res://assets/generated/broccoli_brute_scary.png")
+const BROCCOLI_RUNNER := preload("res://assets/generated/broccoli_runner_scary.png")
+const BROCCOLI_CASTER := preload("res://assets/generated/broccoli_caster_scary.png")
+const BROCCOLI_KNIGHT := preload("res://assets/generated/broccoli_knight_scary.png")
+
 signal enemy_spawned(enemy: Node3D)
 signal enemy_removed(enemy: Node3D)
 
@@ -139,6 +144,7 @@ func make_placeholder_enemy() -> Node3D:
 	var enemy := Node3D.new()
 	enemy.name = "PooledEnemyPlaceholder"
 	var body := MeshInstance3D.new()
+	body.name = "MonsterCore"
 	var mesh := SphereMesh.new()
 	mesh.radius = 0.42
 	mesh.height = 0.84
@@ -151,27 +157,46 @@ func make_placeholder_enemy() -> Node3D:
 	body.material_override = material
 	body.position.y = 0.5
 	enemy.add_child(body)
+	var card := Sprite3D.new()
+	card.name = "MonsterCard"
+	card.texture = BROCCOLI_BRUTE
+	card.pixel_size = 0.0042
+	card.position.y = 1.15
+	card.modulate = Color(1, 1, 1, 0.96)
+	card.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	enemy.add_child(card)
+	var glow := OmniLight3D.new()
+	glow.name = "MonsterGlow"
+	glow.position.y = 0.9
+	glow.light_color = Color(0.25, 0.8, 0.24)
+	glow.light_energy = 0.4
+	glow.omni_range = 3.4
+	enemy.add_child(glow)
 	return enemy
 
 
 func _configure_enemy_for_zone(enemy: Node3D, zone_name: String) -> void:
 	var color := Color(0.18, 0.52, 0.16)
 	var emission := Color(0.08, 0.35, 0.08)
+	var texture := BROCCOLI_BRUTE
 	var scale := 1.0
 	var speed := enemy_move_speed
 	if "Garden" in zone_name:
 		color = Color(0.7, 0.18, 0.1)
 		emission = Color(0.45, 0.08, 0.02)
+		texture = BROCCOLI_RUNNER
 		scale = 0.82
 		speed = enemy_move_speed * 1.35
 	elif "Library" in zone_name:
 		color = Color(0.16, 0.28, 0.74)
 		emission = Color(0.06, 0.14, 0.55)
+		texture = BROCCOLI_CASTER
 		scale = 0.95
 		speed = enemy_move_speed * 0.88
 	elif "Crypt" in zone_name or "Tower" in zone_name:
 		color = Color(0.33, 0.24, 0.12)
 		emission = Color(0.35, 0.2, 0.04)
+		texture = BROCCOLI_KNIGHT
 		scale = 1.35
 		speed = enemy_move_speed * 0.7
 	enemy.scale = Vector3.ONE * scale
@@ -184,6 +209,14 @@ func _configure_enemy_for_zone(enemy: Node3D, zone_name: String) -> void:
 			material.albedo_color = color
 			material.emission = emission
 			body.material_override = material
+	var card := enemy.find_child("MonsterCard", false, false) as Sprite3D
+	if card:
+		card.texture = texture
+		card.pixel_size = 0.0046 / scale
+	var glow := enemy.find_child("MonsterGlow", false, false) as OmniLight3D
+	if glow:
+		glow.light_color = emission.lightened(0.45)
+		glow.light_energy = 0.34 + scale * 0.18
 
 
 func random_point_near(center: Vector3, radius: float) -> Vector3:

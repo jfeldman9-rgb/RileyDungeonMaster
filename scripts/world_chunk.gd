@@ -11,6 +11,12 @@ class_name WorldChunk
 var generated := false
 var noise := FastNoiseLite.new()
 
+const STONE_TILE_A := preload("res://assets/generated/stone_tile_a.png")
+const STONE_TILE_C := preload("res://assets/generated/stone_tile_c.png")
+const BANNER_A := preload("res://assets/generated/banner_a.png")
+const BANNER_B := preload("res://assets/generated/banner_b.png")
+const BANNER_C := preload("res://assets/generated/banner_c.png")
+
 const LANDMARKS := [
 	{"name": "Starting Clearing", "kind": "clearing", "position": Vector3(0.0, 0.0, 14.0), "color": Color(0.22, 0.32, 0.13)},
 	{"name": "Broken Courtyard", "kind": "courtyard", "position": Vector3(4.0, 0.0, -38.0), "color": Color(0.55, 0.48, 0.36)},
@@ -151,7 +157,7 @@ func _add_path_slab(local_pos: Vector3, dir: Vector3, width: float) -> void:
 	path.mesh = mesh
 	path.position = local_pos
 	path.rotation.y = atan2(dir.x, dir.z)
-	path.material_override = _make_material(Color(0.18, 0.13, 0.075), 0.96)
+	path.material_override = _make_path_material()
 	add_child(path)
 
 
@@ -220,7 +226,7 @@ func _add_rock(local_pos: Vector3, scale: float, rng: RandomNumberGenerator) -> 
 	mesh.rings = 4
 	rock.mesh = mesh
 	rock.scale = Vector3(rng.randf_range(0.8, 1.7), rng.randf_range(0.55, 1.1), rng.randf_range(0.8, 1.5))
-	rock.material_override = _make_material(Color(0.17, 0.16, 0.15), 0.88)
+	rock.material_override = _make_stone_material(Color(0.17, 0.16, 0.15))
 	body.add_child(rock)
 	var shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
@@ -238,7 +244,7 @@ func _add_ruin_shard(local_pos: Vector3, scale: float, rng: RandomNumberGenerato
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(rng.randf_range(0.8, 1.8), rng.randf_range(0.65, 1.7), rng.randf_range(0.22, 0.55)) * scale
 	shard.mesh = mesh
-	shard.material_override = _make_material(Color(0.20, 0.18, 0.16), 0.84)
+	shard.material_override = _make_stone_material(Color(0.20, 0.18, 0.16))
 	body.add_child(shard)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -399,6 +405,8 @@ func _build_tower_landmark(center: Vector3, color: Color) -> void:
 		var angle := TAU * float(i) / 6.0
 		_add_column(center + Vector3(cos(angle) * 4.2, 2.0, sin(angle) * 4.2), 0.42, 4.0, color)
 		_add_torch(center + Vector3(cos(angle) * 5.1, 2.2, sin(angle) * 5.1), Color(0.95, 0.42, 1.0))
+	_add_banner(center + Vector3(-3.0, 2.7, -4.4), BANNER_C)
+	_add_banner(center + Vector3(3.0, 2.7, -4.4), BANNER_C)
 	var light := OmniLight3D.new()
 	light.position = center + Vector3(0.0, 4.8, 0.0)
 	light.light_color = color
@@ -418,6 +426,8 @@ func _build_courtyard_landmark(center: Vector3, color: Color) -> void:
 	_add_box(center + Vector3(0.0, 0.3, -5.6), Vector3(9.5, 0.6, 1.2), Color(0.25, 0.22, 0.19))
 	_add_box(center + Vector3(-4.7, 1.2, -5.6), Vector3(0.8, 2.3, 1.0), Color(0.22, 0.20, 0.18))
 	_add_box(center + Vector3(4.7, 1.2, -5.6), Vector3(0.8, 2.3, 1.0), Color(0.22, 0.20, 0.18))
+	_add_banner(center + Vector3(-3.2, 2.0, -5.05), BANNER_A)
+	_add_banner(center + Vector3(3.2, 2.0, -5.05), BANNER_A)
 
 
 func _build_bridge_landmark(center: Vector3, color: Color) -> void:
@@ -436,6 +446,7 @@ func _build_library_landmark(center: Vector3, color: Color) -> void:
 		_add_torch(center + Vector3(x, 3.65, -2.3), Color(0.35, 0.55, 1.0))
 	_add_box(center + Vector3(0.0, 3.55, -2.3), Vector3(8.8, 0.45, 0.8), Color(0.16, 0.17, 0.28))
 	_build_clearing_landmark(center + Vector3(0.0, 0.08, 0.0), color)
+	_add_banner(center + Vector3(0.0, 2.1, -2.78), BANNER_B)
 
 
 func _build_garden_landmark(center: Vector3, color: Color) -> void:
@@ -464,6 +475,7 @@ func _build_crypt_landmark(center: Vector3, color: Color) -> void:
 	for x in [-3.4, 3.4]:
 		_add_column(center + Vector3(x, 1.55, 2.2), 0.36, 3.1, color)
 		_add_torch(center + Vector3(x, 2.95, 2.2), Color(1.0, 0.72, 0.22))
+	_add_banner(center + Vector3(0.0, 2.2, 1.0), BANNER_C)
 
 
 func _add_box(center: Vector3, size: Vector3, color: Color) -> void:
@@ -474,7 +486,7 @@ func _add_box(center: Vector3, size: Vector3, color: Color) -> void:
 	var mesh := BoxMesh.new()
 	mesh.size = size
 	node.mesh = mesh
-	node.material_override = _make_material(color, 0.82)
+	node.material_override = _make_stone_material(color)
 	body.add_child(node)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -494,7 +506,7 @@ func _add_column(center: Vector3, radius: float, height: float, color: Color) ->
 	mesh.height = height
 	mesh.radial_segments = 8
 	marker.mesh = mesh
-	marker.material_override = _make_material(color, 0.82)
+	marker.material_override = _make_stone_material(color)
 	body.add_child(marker)
 	var shape := CollisionShape3D.new()
 	var cylinder := CylinderShape3D.new()
@@ -564,11 +576,38 @@ func _add_ground_glow(local_pos: Vector3, color: Color, energy: float) -> void:
 	add_child(light)
 
 
+func _add_banner(local_pos: Vector3, texture: Texture2D) -> void:
+	var banner := Sprite3D.new()
+	banner.texture = texture
+	banner.pixel_size = 0.012
+	banner.position = local_pos
+	banner.modulate = Color(1, 1, 1, 0.92)
+	banner.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	add_child(banner)
+
+
 func _make_terrain_material() -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.vertex_color_use_as_albedo = true
 	material.roughness = 0.86
 	material.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
+	return material
+
+
+func _make_path_material() -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.31, 0.22, 0.14)
+	material.albedo_texture = STONE_TILE_C
+	material.roughness = 0.9
+	return material
+
+
+func _make_stone_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color.lightened(0.08)
+	material.albedo_texture = STONE_TILE_A
+	material.roughness = 0.78
+	material.metallic = 0.02
 	return material
 
 
