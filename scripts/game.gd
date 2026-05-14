@@ -525,16 +525,18 @@ func build_world() -> void:
 	var environment := WorldEnvironment.new()
 	world_environment = environment
 	var env := Environment.new()
+	var using_compatibility_renderer: bool = ProjectSettings.get_setting("rendering/renderer/rendering_method", "") == "gl_compatibility"
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.014, 0.012, 0.028)
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.2, 0.16, 0.28)
 	env.fog_density = 0.018
-	env.set("volumetric_fog_enabled", true)
-	env.set("volumetric_fog_density", 0.028)
-	env.set("volumetric_fog_albedo", Color(0.32, 0.27, 0.45))
-	env.set("volumetric_fog_emission", Color(0.08, 0.04, 0.13))
-	env.set("volumetric_fog_emission_energy", 0.45)
+	env.set("volumetric_fog_enabled", not using_compatibility_renderer)
+	if not using_compatibility_renderer:
+		env.set("volumetric_fog_density", 0.028)
+		env.set("volumetric_fog_albedo", Color(0.32, 0.27, 0.45))
+		env.set("volumetric_fog_emission", Color(0.08, 0.04, 0.13))
+		env.set("volumetric_fog_emission_energy", 0.45)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.1, 0.1, 0.16)
 	env.ambient_light_energy = 0.28   # was 0.62 — dark dungeon contrast

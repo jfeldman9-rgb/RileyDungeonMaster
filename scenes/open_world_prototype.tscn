@@ -1,0 +1,99 @@
+[gd_scene load_steps=11 format=3 uid="uid://open_world_modular_prototype"]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://scripts/world_generator.gd" id="2_world"]
+[ext_resource type="Script" path="res://scripts/camera_rig.gd" id="3_camera"]
+[ext_resource type="Script" path="res://scripts/enemy_manager.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/day_night_cycle.gd" id="5_daynight"]
+[ext_resource type="Script" path="res://scripts/object_pool.gd" id="6_pool"]
+[ext_resource type="Script" path="res://scripts/lod_manager.gd" id="7_lod"]
+[ext_resource type="Script" path="res://scripts/audio_manager.gd" id="8_audio"]
+
+[sub_resource type="Environment" id="Environment_open_world"]
+background_mode = 1
+background_color = Color(0.045, 0.055, 0.09, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.28, 0.28, 0.36, 1)
+ambient_light_energy = 0.58
+fog_enabled = true
+fog_light_color = Color(0.32, 0.34, 0.44, 1)
+fog_density = 0.006
+glow_enabled = true
+glow_intensity = 0.8
+ssao_enabled = true
+ssao_intensity = 2.0
+dof_blur_far_enabled = true
+dof_blur_far_distance = 42.0
+dof_blur_far_transition = 18.0
+dof_blur_amount = 0.25
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_spawn_zone"]
+size = Vector3(24, 3, 24)
+
+[node name="OpenWorldPrototype" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_open_world")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 20, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Moon" type="DirectionalLight3D" parent="."]
+visible = false
+light_color = Color(0.45, 0.55, 0.9, 1)
+light_energy = 0.32
+
+[node name="RileyPlayer" parent="." instance=ExtResource("1_player")]
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("2_world")
+active = true
+player_path = NodePath("../RileyPlayer")
+load_radius = 1
+unload_radius = 2
+lod_manager_path = NodePath("../LODManager")
+
+[node name="ObjectPool" type="Node" parent="."]
+script = ExtResource("6_pool")
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("3_camera")
+target_path = NodePath("../RileyPlayer")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+current = true
+fov = 58.0
+
+[node name="LODManager" type="Node" parent="."]
+script = ExtResource("7_lod")
+camera_path = NodePath("../CameraRig/Camera3D")
+
+[node name="EnemyManager" type="Node" parent="."]
+script = ExtResource("4_enemy")
+active = true
+player_path = NodePath("../RileyPlayer")
+world_path = NodePath("../World")
+pool_path = NodePath("../ObjectPool")
+
+[node name="ForestSpawn" type="Area3D" parent="EnemyManager"]
+position = Vector3(14, 1.5, -16)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EnemyManager/ForestSpawn"]
+shape = SubResource("BoxShape3D_spawn_zone")
+
+[node name="RuinsSpawn" type="Area3D" parent="EnemyManager"]
+position = Vector3(-18, 1.5, -30)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EnemyManager/RuinsSpawn"]
+shape = SubResource("BoxShape3D_spawn_zone")
+
+[node name="DayNightCycle" type="Node" parent="."]
+script = ExtResource("5_daynight")
+active = true
+sun_path = NodePath("../Sun")
+moon_path = NodePath("../Moon")
+
+[node name="AudioManager" type="Node" parent="."]
+script = ExtResource("8_audio")

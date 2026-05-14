@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://dungeonmastermain"]
+[gd_scene load_steps=6 format=3 uid="uid://dungeonmastermain"]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/world_generator.gd" id="2_worldgen"]
+[ext_resource type="Script" path="res://scripts/day_night_cycle.gd" id="3_daynight"]
+[ext_resource type="Script" path="res://scripts/enemy_manager.gd" id="4_enemies"]
+[ext_resource type="Script" path="res://scripts/audio_manager.gd" id="5_audio"]
 
 [node name="DungeonMasterGame" type="Node3D"]
 script = ExtResource("1_game")
@@ -9,3 +12,14 @@ script = ExtResource("1_game")
 [node name="World" type="Node3D" parent="."]
 script = ExtResource("2_worldgen")
 active = false
+
+[node name="EnemyManager" type="Node" parent="."]
+script = ExtResource("4_enemies")
+active = false
+
+[node name="DayNightCycle" type="Node" parent="."]
+script = ExtResource("3_daynight")
+active = false
+
+[node name="AudioManager" type="Node" parent="."]
+script = ExtResource("5_audio")

@@ -6,6 +6,9 @@ class_name CameraRig
 @export var follow_height := 8.5
 @export var look_ahead := 6.0
 @export var smoothing := 8.0
+@export var rotate_speed := 1.65
+@export var portrait_height_bonus := 4.0
+@export var portrait_distance_bonus := 4.5
 
 var yaw := 0.0
 var target: Node3D
@@ -20,7 +23,16 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not target or not camera:
 		return
+	if Input.is_key_pressed(KEY_Q):
+		yaw -= rotate_speed * delta
+	if Input.is_key_pressed(KEY_E):
+		yaw += rotate_speed * delta
+	if target.has_method("set_camera_yaw"):
+		target.call("set_camera_yaw", yaw)
 	var forward := Vector3(sin(yaw), 0.0, -cos(yaw)).normalized()
-	var desired := target.global_position - forward * follow_distance + Vector3.UP * follow_height
+	var portrait := get_viewport().get_visible_rect().size.y > get_viewport().get_visible_rect().size.x
+	var distance := follow_distance + (portrait_distance_bonus if portrait else 0.0)
+	var height := follow_height + (portrait_height_bonus if portrait else 0.0)
+	var desired := target.global_position - forward * distance + Vector3.UP * height
 	global_position = global_position.lerp(desired, minf(1.0, smoothing * delta))
 	camera.look_at(target.global_position + forward * look_ahead + Vector3.UP)
