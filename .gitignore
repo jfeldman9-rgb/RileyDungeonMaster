@@ -5,3 +5,5 @@
 export_presets.cfg
 exports/
 builds/
+
+*.gd.uid
