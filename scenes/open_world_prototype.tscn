@@ -78,8 +78,8 @@ position = Vector3(0, 2.5, 14)
 script = ExtResource("2_world")
 active = true
 player_path = NodePath("../RileyPlayer")
-load_radius = 1
-unload_radius = 2
+load_radius = 2
+unload_radius = 3
 lod_manager_path = NodePath("../LODManager")
 
 [node name="ObjectPool" type="Node" parent="."]
