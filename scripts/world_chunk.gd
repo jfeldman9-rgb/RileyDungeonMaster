@@ -432,6 +432,7 @@ func _build_tower_landmark(center: Vector3, color: Color) -> void:
 		_add_torch(center + Vector3(cos(angle) * 5.1, 2.2, sin(angle) * 5.1), Color(0.95, 0.42, 1.0))
 	_add_banner(center + Vector3(-3.0, 2.7, -4.4), BANNER_C)
 	_add_banner(center + Vector3(3.0, 2.7, -4.4), BANNER_C)
+	_add_crystal_cluster(center + Vector3(0.0, 0.7, 4.2), color)
 	var light := OmniLight3D.new()
 	light.position = center + Vector3(0.0, 4.8, 0.0)
 	light.light_color = color
@@ -453,6 +454,7 @@ func _build_courtyard_landmark(center: Vector3, color: Color) -> void:
 	_add_box(center + Vector3(4.7, 1.2, -5.6), Vector3(0.8, 2.3, 1.0), Color(0.22, 0.20, 0.18))
 	_add_banner(center + Vector3(-3.2, 2.0, -5.05), BANNER_A)
 	_add_banner(center + Vector3(3.2, 2.0, -5.05), BANNER_A)
+	_add_crystal_cluster(center + Vector3(0.0, 0.5, 0.0), Color(1.0, 0.65, 0.25))
 
 
 func _build_bridge_landmark(center: Vector3, color: Color) -> void:
@@ -472,6 +474,8 @@ func _build_library_landmark(center: Vector3, color: Color) -> void:
 	_add_box(center + Vector3(0.0, 3.55, -2.3), Vector3(8.8, 0.45, 0.8), Color(0.16, 0.17, 0.28))
 	_build_clearing_landmark(center + Vector3(0.0, 0.08, 0.0), color)
 	_add_banner(center + Vector3(0.0, 2.1, -2.78), BANNER_B)
+	_add_crystal_cluster(center + Vector3(-4.0, 0.45, 1.8), Color(0.35, 0.65, 1.0))
+	_add_crystal_cluster(center + Vector3(4.0, 0.45, 1.8), Color(0.35, 0.65, 1.0))
 
 
 func _build_garden_landmark(center: Vector3, color: Color) -> void:
@@ -491,6 +495,8 @@ func _build_garden_landmark(center: Vector3, color: Color) -> void:
 	puddle.material_override = _make_emissive_material(Color(0.08, 0.42, 0.12, 0.72), 0.22)
 	add_child(puddle)
 	_add_ground_glow(center + Vector3.UP * 0.04, Color(0.2, 0.95, 0.24), 0.5)
+	_add_crystal_cluster(center + Vector3(-4.8, 0.45, -2.2), Color(0.3, 1.0, 0.36))
+	_add_crystal_cluster(center + Vector3(4.8, 0.45, 2.2), Color(0.3, 1.0, 0.36))
 
 
 func _build_crypt_landmark(center: Vector3, color: Color) -> void:
@@ -501,6 +507,7 @@ func _build_crypt_landmark(center: Vector3, color: Color) -> void:
 		_add_column(center + Vector3(x, 1.55, 2.2), 0.36, 3.1, color)
 		_add_torch(center + Vector3(x, 2.95, 2.2), Color(1.0, 0.72, 0.22))
 	_add_banner(center + Vector3(0.0, 2.2, 1.0), BANNER_C)
+	_add_crystal_cluster(center + Vector3(0.0, 0.45, 3.2), Color(1.0, 0.72, 0.28))
 
 
 func _add_box(center: Vector3, size: Vector3, color: Color) -> void:
@@ -561,6 +568,27 @@ func _add_tree(center: Vector3, scale: float, color: Color) -> void:
 	crown.position = center + Vector3.UP * (2.55 * scale)
 	crown.material_override = _make_material(color, 0.92)
 	add_child(crown)
+
+
+func _add_crystal_cluster(local_pos: Vector3, color: Color) -> void:
+	for i in range(5):
+		var crystal := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = 0.0
+		mesh.bottom_radius = 0.18 + float(i % 3) * 0.06
+		mesh.height = 0.9 + float(i) * 0.18
+		mesh.radial_segments = 5
+		crystal.mesh = mesh
+		crystal.position = local_pos + Vector3(sin(float(i) * 1.9) * 0.45, mesh.height * 0.5, cos(float(i) * 2.1) * 0.38)
+		crystal.rotation_degrees = Vector3(randf_range(-8.0, 8.0), float(i) * 43.0, randf_range(-8.0, 8.0))
+		crystal.material_override = _make_emissive_material(color, 0.75)
+		add_child(crystal)
+	var light := OmniLight3D.new()
+	light.position = local_pos + Vector3.UP * 0.9
+	light.light_color = color
+	light.light_energy = 0.8
+	light.omni_range = 6.0
+	add_child(light)
 
 
 func _add_torch(local_pos: Vector3, color: Color) -> void:
