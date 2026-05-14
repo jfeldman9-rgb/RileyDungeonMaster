@@ -188,6 +188,7 @@ func _build_foliage() -> void:
 	_build_tree_multimesh()
 	_build_grass_multimesh()
 	_build_flower_multimesh()
+	_build_leaf_litter_multimesh()
 
 
 func _build_scattered_adventure_props() -> void:
@@ -373,6 +374,30 @@ func _build_flower_multimesh() -> void:
 	inst.name = "FlowerMotes"
 	inst.multimesh = mm
 	inst.material_override = _make_emissive_material(Color(0.65, 0.58, 1.0), 0.16)
+	add_child(inst)
+
+
+func _build_leaf_litter_multimesh() -> void:
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.18, 0.012, 0.07)
+	var count := 90
+	var mm := MultiMesh.new()
+	mm.mesh = mesh
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = count
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed + chunk_coord.x * 71003 + chunk_coord.y * 73009
+	for i in range(count):
+		var lx := rng.randf_range(-chunk_size * 0.49, chunk_size * 0.49)
+		var lz := rng.randf_range(-chunk_size * 0.49, chunk_size * 0.49)
+		var scale := rng.randf_range(0.7, 1.6)
+		var t := Transform3D(Basis().scaled(Vector3(scale, scale, scale)), Vector3(lx, sample_height(lx, lz) + 0.035, lz))
+		t.basis = t.basis.rotated(Vector3.UP, rng.randf_range(0.0, TAU))
+		mm.set_instance_transform(i, t)
+	var inst := MultiMeshInstance3D.new()
+	inst.name = "LeafLitter"
+	inst.multimesh = mm
+	inst.material_override = _make_material(Color(0.38, 0.19, 0.08), 0.94)
 	add_child(inst)
 
 
