@@ -11,6 +11,7 @@ class_name WorldChunk
 var generated := false
 var noise := FastNoiseLite.new()
 var torch_lights: Array[OmniLight3D] = []
+var atmosphere_motes: Array[MeshInstance3D] = []
 
 const STONE_TILE_A := preload("res://assets/generated/stone_tile_a.png")
 const STONE_TILE_C := preload("res://assets/generated/stone_tile_c.png")
@@ -47,6 +48,12 @@ func _process(_delta: float) -> void:
 		var phase := float(light.get_meta("phase", 0.0))
 		var base := float(light.get_meta("base_energy", 1.0))
 		light.light_energy = base + sin(time * 7.0 + phase) * 0.18 + sin(time * 13.0 + phase * 0.7) * 0.08
+	for mote in atmosphere_motes:
+		if not is_instance_valid(mote):
+			continue
+		var base_pos := mote.get_meta("base_pos", mote.position) as Vector3
+		var phase := float(mote.get_meta("phase", 0.0))
+		mote.position = base_pos + Vector3(sin(time * 0.8 + phase) * 0.18, sin(time * 1.15 + phase) * 0.08, cos(time * 0.7 + phase) * 0.18)
 
 
 func generate(coord: Vector2i, size: float, world_seed: int = 1337) -> void:
@@ -213,6 +220,9 @@ func _build_atmosphere_motes() -> void:
 		var lz := rng.randf_range(-chunk_size * 0.47, chunk_size * 0.47)
 		mote.position = Vector3(lx, sample_height(lx, lz) + rng.randf_range(0.8, 3.4), lz)
 		mote.material_override = _make_emissive_material(Color(0.75, 0.68, 1.0, 0.55), rng.randf_range(0.22, 0.48))
+		mote.set_meta("base_pos", mote.position)
+		mote.set_meta("phase", rng.randf_range(0.0, TAU))
+		atmosphere_motes.append(mote)
 		add_child(mote)
 
 
