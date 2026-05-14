@@ -1,6 +1,11 @@
-[gd_scene load_steps=2 format=3 uid="uid://dungeonmastermain"]
+[gd_scene load_steps=3 format=3 uid="uid://dungeonmastermain"]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/world_generator.gd" id="2_worldgen"]
 
 [node name="DungeonMasterGame" type="Node3D"]
 script = ExtResource("1_game")
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("2_worldgen")
+active = false
