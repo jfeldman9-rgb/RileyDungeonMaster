@@ -148,6 +148,10 @@ func _build_path_marks() -> void:
 			var local_pos := Vector3(world_pos.x - position.x, 0.0, world_pos.z - position.z)
 			local_pos.y = sample_height(local_pos.x, local_pos.z) + 0.045
 			_add_path_slab(local_pos, dir, 3.8 + sin(t * PI) * 1.4)
+			if i % 5 == 0:
+				var side := Vector3(-dir.z, 0.0, dir.x) * (2.9 if (i / 5) % 2 == 0 else -2.9)
+				var lantern_pos := local_pos + side + Vector3.UP * 1.05
+				_add_torch(lantern_pos, Color(1.0, 0.52, 0.18))
 
 
 func _add_path_slab(local_pos: Vector3, dir: Vector3, width: float) -> void:
