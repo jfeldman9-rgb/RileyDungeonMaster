@@ -15,6 +15,7 @@ Current entry point:
 Key new systems:
 - `scripts/world_generator.gd` streams terrain chunks.
 - `scripts/world_chunk.gd` builds rolling terrain, paths, foliage, landmarks, rocks, ruins, and collision.
+- `scripts/visual_director.gd` restores the higher-fidelity mood with sky, fog, glow, SSAO, DOF, and lighting.
 - `scripts/player_controller.gd` owns modular Riley movement/combat.
 - `scripts/enemy_manager.gd` owns modular spawn zones and area-colored enemy placeholders.
 - `scripts/world_objective_manager.gd` owns seal collection, Kenzie gate unlock, tower boss prototype, and payoff story card.
