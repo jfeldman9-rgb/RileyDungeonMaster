@@ -28,10 +28,16 @@ var pickups: Dictionary = {}
 var gate: Node3D
 var tower_reached := false
 var current_region := ""
+var boss_active := false
+var boss_shield_hp := 5
+var kenzie_avatar: Node3D
+var kenzie_shield: Node3D
 
 
 func _ready() -> void:
 	player = get_node_or_null(player_path) as Node3D
+	if player and player.has_signal("slice_requested"):
+		player.slice_requested.connect(_on_player_slice)
 	ui = get_node_or_null(ui_path)
 	if has_node("/root/GameState"):
 		state = get_node("/root/GameState")
@@ -57,6 +63,7 @@ func _process(delta: float) -> void:
 			_collect_seal(str(seal_id), pickup)
 	_update_region_label()
 	_check_tower_reached()
+	_update_boss_visuals(delta)
 
 
 func _build_seal_pickups() -> void:
@@ -139,6 +146,7 @@ func _build_distant_kenzie_tower() -> void:
 	kenzie.position = Vector3(0.0, 7.4, -1.5)
 	kenzie.material_override = _make_emissive_material(Color(0.65, 0.2, 0.95), 1.1)
 	tower.add_child(kenzie)
+	kenzie_avatar = kenzie
 	var shield := MeshInstance3D.new()
 	var shield_mesh := TorusMesh.new()
 	shield_mesh.inner_radius = 1.4
@@ -149,6 +157,7 @@ func _build_distant_kenzie_tower() -> void:
 	shield.position = kenzie.position
 	shield.material_override = _make_emissive_material(Color(0.3, 1.0, 0.34), 1.35)
 	tower.add_child(shield)
+	kenzie_shield = shield
 	var light := OmniLight3D.new()
 	light.position = Vector3(0.0, 7.5, -1.5)
 	light.light_color = Color(0.75, 0.28, 1.0)
@@ -206,9 +215,40 @@ func _check_tower_reached() -> void:
 	if player.global_position.distance_to(Vector3(22.0, player.global_position.y, -108.0)) > 8.0:
 		return
 	tower_reached = true
+	boss_active = true
+	boss_shield_hp = 5
 	if ui:
-		ui.show_message("KENZIE TOWER", "Boss arena hook reached. Next migration: full shield fight.")
-		ui.set_objective_hint("Prototype milestone reached: Kenzie fight handoff point.")
+		ui.show_message("KENZIE TOWER", "Break the broccoli shield.")
+		ui.set_objective_hint("Boss prototype: slash Kenzie's shield five times.")
+
+
+func _on_player_slice() -> void:
+	if not boss_active or not player:
+		return
+	var tower_flat := Vector2(22.0, -108.0)
+	var player_flat := Vector2(player.global_position.x, player.global_position.z)
+	if player_flat.distance_to(tower_flat) > 11.0:
+		return
+	boss_shield_hp = maxi(0, boss_shield_hp - 1)
+	if ui:
+		ui.show_message("SHIELD HIT", "%d/5 shield layers remain." % boss_shield_hp)
+	if boss_shield_hp <= 0:
+		boss_active = false
+		if kenzie_shield:
+			kenzie_shield.visible = false
+		if ui:
+			ui.show_message("KENZIE SAVED", "Bubby, you saved me! Candy time.")
+			ui.set_objective_hint("Prototype complete: final cutscene handoff ready.")
+			if ui.has_method("show_story_card"):
+				ui.call("show_story_card", "KENZIE SAVED", "The broccoli shield breaks apart in green sparks. Kenzie lowers her staff and smiles.\n\n\"Bubby, you saved me! Thank you, my ninja hero. Now let's go eat some candy!\"")
+
+
+func _update_boss_visuals(delta: float) -> void:
+	if kenzie_shield and kenzie_shield.visible:
+		kenzie_shield.rotate_y(delta * (1.5 + float(5 - boss_shield_hp) * 0.55))
+		kenzie_shield.scale = Vector3.ONE * (1.0 + sin(Time.get_ticks_msec() * 0.006) * 0.06)
+	if kenzie_avatar:
+		kenzie_avatar.position.y = 7.4 + sin(Time.get_ticks_msec() * 0.003) * 0.18
 
 
 func _update_region_label() -> void:

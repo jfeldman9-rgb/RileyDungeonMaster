@@ -10,6 +10,9 @@ var seal_label: Label
 var region_label: Label
 var objective_label: Label
 var message_label: Label
+var story_panel: PanelContainer
+var story_title: Label
+var story_body: Label
 var message_timer := 0.0
 
 
@@ -76,6 +79,7 @@ func _build_hud() -> void:
 	message_label.offset_bottom = 190
 	message_label.modulate.a = 0.0
 	add_child(message_label)
+	_build_story_panel()
 
 
 func _make_label(text: String, size: int, color: Color) -> Label:
@@ -89,12 +93,48 @@ func _make_label(text: String, size: int, color: Color) -> Label:
 	return label
 
 
+func _build_story_panel() -> void:
+	story_panel = PanelContainer.new()
+	story_panel.visible = false
+	story_panel.custom_minimum_size = Vector2(620, 260)
+	story_panel.set_anchors_preset(Control.PRESET_CENTER)
+	story_panel.offset_left = -310
+	story_panel.offset_right = 310
+	story_panel.offset_top = -130
+	story_panel.offset_bottom = 130
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.015, 0.035, 0.92)
+	style.border_color = Color(0.86, 0.72, 0.34, 0.9)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	story_panel.add_theme_stylebox_override("panel", style)
+	add_child(story_panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 14)
+	story_panel.add_child(box)
+	story_title = _make_label("", 30, Color(1.0, 0.84, 0.35))
+	story_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(story_title)
+	story_body = _make_label("", 18, Color(0.92, 0.92, 0.88))
+	story_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	story_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(story_body)
+
+
 func show_message(_title: String, _subtitle: String = "") -> void:
 	if not message_label:
 		return
 	message_label.text = _title + ("\n" + _subtitle if _subtitle != "" else "")
 	message_label.modulate.a = 1.0
 	message_timer = 2.4
+
+
+func show_story_card(title: String, body: String) -> void:
+	if not story_panel:
+		return
+	story_title.text = title
+	story_body.text = body
+	story_panel.visible = true
 
 
 func set_objective_hint(_text: String) -> void:
