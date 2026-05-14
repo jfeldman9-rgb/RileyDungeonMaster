@@ -43,6 +43,11 @@ func _process(delta: float) -> void:
 			message_label.modulate.a = 0.0
 
 
+func _input(event: InputEvent) -> void:
+	if story_panel and story_panel.visible and event.is_action_pressed("ui_accept"):
+		story_panel.visible = false
+
+
 func _build_hud() -> void:
 	var panel := PanelContainer.new()
 	panel.name = "HudPanel"
