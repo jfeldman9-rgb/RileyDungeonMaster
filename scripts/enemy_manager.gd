@@ -11,6 +11,8 @@ signal enemy_removed(enemy: Node3D)
 @export var world_path: NodePath
 @export var pool_path: NodePath
 @export var spawn_interval := 2.8
+@export var enemy_move_speed := 2.2
+@export var enemy_agro_radius := 34.0
 @export var active := false
 
 var active_enemies: Array[Node3D] = []
@@ -39,12 +41,14 @@ func _process(delta: float) -> void:
 	if spawn_timer <= 0.0:
 		spawn_timer = spawn_interval
 		try_spawn_from_nearby_zone()
+	update_enemy_motion(delta)
 	cull_far_enemies()
 
 
 func register_enemy(enemy: Node3D) -> void:
 	if enemy in active_enemies:
 		return
+	enemy.add_to_group("enemy")
 	active_enemies.append(enemy)
 	enemy_spawned.emit(enemy)
 
@@ -100,6 +104,19 @@ func cull_far_enemies() -> void:
 			continue
 		if enemy.global_position.distance_to(player.global_position) > despawn_radius:
 			remove_enemy(enemy)
+
+
+func update_enemy_motion(delta: float) -> void:
+	for enemy in active_enemies:
+		if not is_instance_valid(enemy):
+			continue
+		var to_player := player.global_position - enemy.global_position
+		to_player.y = 0.0
+		if to_player.length() > enemy_agro_radius or to_player.length() < 0.1:
+			continue
+		var dir := to_player.normalized()
+		enemy.global_position += dir * enemy_move_speed * delta
+		enemy.rotation.y = lerp_angle(enemy.rotation.y, atan2(dir.x, dir.z), minf(1.0, 9.0 * delta))
 
 
 func make_placeholder_enemy() -> Node3D:

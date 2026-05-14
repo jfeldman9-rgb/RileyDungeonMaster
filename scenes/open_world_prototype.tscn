@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://open_world_modular_prototype"]
+[gd_scene load_steps=13 format=3 uid="uid://open_world_modular_prototype"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/world_generator.gd" id="2_world"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/object_pool.gd" id="6_pool"]
 [ext_resource type="Script" path="res://scripts/lod_manager.gd" id="7_lod"]
 [ext_resource type="Script" path="res://scripts/audio_manager.gd" id="8_audio"]
+[ext_resource type="Script" path="res://scripts/ui_manager.gd" id="9_ui"]
+[ext_resource type="Script" path="res://scripts/world_objective_manager.gd" id="10_objectives"]
 
 [sub_resource type="Environment" id="Environment_open_world"]
 background_mode = 1
@@ -58,6 +60,11 @@ lod_manager_path = NodePath("../LODManager")
 [node name="ObjectPool" type="Node" parent="."]
 script = ExtResource("6_pool")
 
+[node name="WorldObjectives" type="Node3D" parent="."]
+script = ExtResource("10_objectives")
+player_path = NodePath("../RileyPlayer")
+ui_path = NodePath("../OpenWorldHud")
+
 [node name="CameraRig" type="Node3D" parent="."]
 script = ExtResource("3_camera")
 target_path = NodePath("../RileyPlayer")
@@ -89,6 +96,30 @@ position = Vector3(-18, 1.5, -30)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EnemyManager/RuinsSpawn"]
 shape = SubResource("BoxShape3D_spawn_zone")
 
+[node name="LibrarySpawn" type="Area3D" parent="EnemyManager"]
+position = Vector3(-62, 1.5, -34)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EnemyManager/LibrarySpawn"]
+shape = SubResource("BoxShape3D_spawn_zone")
+
+[node name="GardenSpawn" type="Area3D" parent="EnemyManager"]
+position = Vector3(58, 1.5, -26)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EnemyManager/GardenSpawn"]
+shape = SubResource("BoxShape3D_spawn_zone")
+
+[node name="CryptSpawn" type="Area3D" parent="EnemyManager"]
+position = Vector3(-32, 1.5, -86)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EnemyManager/CryptSpawn"]
+shape = SubResource("BoxShape3D_spawn_zone")
+
+[node name="TowerApproachSpawn" type="Area3D" parent="EnemyManager"]
+position = Vector3(22, 1.5, -96)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EnemyManager/TowerApproachSpawn"]
+shape = SubResource("BoxShape3D_spawn_zone")
+
 [node name="DayNightCycle" type="Node" parent="."]
 script = ExtResource("5_daynight")
 active = true
@@ -97,3 +128,6 @@ moon_path = NodePath("../Moon")
 
 [node name="AudioManager" type="Node" parent="."]
 script = ExtResource("8_audio")
+
+[node name="OpenWorldHud" type="Control" parent="."]
+script = ExtResource("9_ui")

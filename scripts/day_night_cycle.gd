@@ -23,6 +23,8 @@ func _ready() -> void:
 	sun = get_node_or_null(sun_path) as DirectionalLight3D
 	moon = get_node_or_null(moon_path) as DirectionalLight3D
 	rain_particles = get_node_or_null(rain_particles_path) as GPUParticles3D
+	if not rain_particles:
+		_create_default_rain()
 	_apply_lighting()
 
 
@@ -55,3 +57,25 @@ func _toggle_weather() -> void:
 	if not rain_particles:
 		return
 	rain_particles.emitting = randf() < 0.35
+
+
+func _create_default_rain() -> void:
+	rain_particles = GPUParticles3D.new()
+	rain_particles.name = "ProceduralRain"
+	rain_particles.amount = 260
+	rain_particles.lifetime = 1.25
+	rain_particles.visibility_aabb = AABB(Vector3(-36.0, -18.0, -36.0), Vector3(72.0, 36.0, 72.0))
+	var process := ParticleProcessMaterial.new()
+	process.direction = Vector3(0.0, -1.0, 0.0)
+	process.spread = 8.0
+	process.initial_velocity_min = 18.0
+	process.initial_velocity_max = 24.0
+	process.gravity = Vector3(0.0, -2.0, 0.0)
+	process.scale_min = 0.7
+	process.scale_max = 1.15
+	rain_particles.process_material = process
+	var drop := BoxMesh.new()
+	drop.size = Vector3(0.025, 0.85, 0.025)
+	rain_particles.draw_pass_1 = drop
+	rain_particles.emitting = false
+	add_child(rain_particles)

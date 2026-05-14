@@ -38,6 +38,8 @@ func _process(_delta: float) -> void:
 	if next_chunk != current_chunk:
 		current_chunk = next_chunk
 		_refresh_chunks()
+	elif pending_loads.size() > 0:
+		_process_pending_loads()
 
 
 func world_to_chunk(world_position: Vector3) -> Vector2i:
@@ -53,13 +55,17 @@ func _refresh_chunks() -> void:
 			desired[coord] = true
 			if not loaded_chunks.has(coord) and coord not in pending_loads:
 				pending_loads.append(coord)
-	var loads_this_refresh := mini(max_chunk_loads_per_refresh, pending_loads.size())
-	for i in range(loads_this_refresh):
-		_load_chunk(pending_loads.pop_front())
+	_process_pending_loads()
 	for coord in loaded_chunks.keys():
 		var c: Vector2i = coord
 		if abs(c.x - center.x) > unload_radius or abs(c.y - center.y) > unload_radius:
 			_unload_chunk(c)
+
+
+func _process_pending_loads() -> void:
+	var loads_this_refresh := mini(max_chunk_loads_per_refresh, pending_loads.size())
+	for i in range(loads_this_refresh):
+		_load_chunk(pending_loads.pop_front())
 
 
 func _load_chunk(coord: Vector2i) -> void:
