@@ -35,6 +35,7 @@ var boss_active := false
 var boss_shield_hp := 5
 var kenzie_avatar: Node3D
 var kenzie_shield: Node3D
+var kenzie_shield_visuals: Array[Node3D] = []
 var water_segments: Array[MeshInstance3D] = []
 
 
@@ -172,6 +173,7 @@ func _build_distant_kenzie_tower() -> void:
 	shield.material_override = _make_emissive_material(Color(0.3, 1.0, 0.34), 1.35)
 	tower.add_child(shield)
 	kenzie_shield = shield
+	kenzie_shield_visuals.append(shield)
 	var shield_sprite := Sprite3D.new()
 	shield_sprite.name = "BroccoliShieldPaintedDetail"
 	shield_sprite.texture = BROCCOLI_SHIELD
@@ -180,6 +182,7 @@ func _build_distant_kenzie_tower() -> void:
 	shield_sprite.modulate = Color(0.8, 1.0, 0.75, 0.6)
 	shield_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	tower.add_child(shield_sprite)
+	kenzie_shield_visuals.append(shield_sprite)
 	_add_kenzie_aura(tower)
 	var light := OmniLight3D.new()
 	light.position = Vector3(0.0, 7.5, -1.5)
@@ -338,8 +341,9 @@ func _on_player_slice() -> void:
 		ui.show_message("SHIELD HIT", "%d/5 shield layers remain." % boss_shield_hp)
 	if boss_shield_hp <= 0:
 		boss_active = false
-		if kenzie_shield:
-			kenzie_shield.visible = false
+		for visual in kenzie_shield_visuals:
+			if is_instance_valid(visual):
+				visual.visible = false
 		if ui:
 			ui.show_message("KENZIE SAVED", "Bubby, you saved me! Candy time.")
 			ui.set_objective_hint("Prototype complete: final cutscene handoff ready.")
@@ -351,6 +355,9 @@ func _update_boss_visuals(delta: float) -> void:
 	if kenzie_shield and kenzie_shield.visible:
 		kenzie_shield.rotate_y(delta * (1.5 + float(5 - boss_shield_hp) * 0.55))
 		kenzie_shield.scale = Vector3.ONE * (1.0 + sin(Time.get_ticks_msec() * 0.006) * 0.06)
+	for visual in kenzie_shield_visuals:
+		if is_instance_valid(visual) and visual != kenzie_shield and visual.visible:
+			visual.rotate_y(delta * (1.2 + float(5 - boss_shield_hp) * 0.4))
 	if kenzie_avatar:
 		kenzie_avatar.position.y = 7.4 + sin(Time.get_ticks_msec() * 0.003) * 0.18
 
