@@ -101,6 +101,8 @@ fov = 58.0
 [node name="LODManager" type="Node" parent="."]
 script = ExtResource("7_lod")
 camera_path = NodePath("../CameraRig/Camera3D")
+near_distance = 52.0
+far_distance = 140.0
 
 [node name="EnemyManager" type="Node" parent="."]
 script = ExtResource("4_enemy")
