@@ -91,12 +91,12 @@ func _unload_chunk(coord: Vector2i) -> void:
 
 
 func _fade_chunk_in(chunk: Node3D) -> void:
-	chunk.scale = Vector3(1.0, 0.02, 1.0)
+	chunk.scale = Vector3(0.985, 0.985, 0.985)
 	var tween := create_tween()
 	tween.tween_property(chunk, "scale", Vector3.ONE, fade_transition_time).set_trans(Tween.TRANS_SINE)
 
 
 func _fade_chunk_out(chunk: Node3D) -> void:
 	var tween := create_tween()
-	tween.tween_property(chunk, "scale", Vector3(1.0, 0.02, 1.0), fade_transition_time).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(chunk, "scale", Vector3(0.985, 0.985, 0.985), fade_transition_time).set_trans(Tween.TRANS_SINE)
 	tween.finished.connect(chunk.queue_free)
