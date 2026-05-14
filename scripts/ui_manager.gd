@@ -154,7 +154,8 @@ func set_region_name(_text: String) -> void:
 
 func _on_score_changed(_new_score: int) -> void:
 	if score_label:
-		score_label.text = "Score %d" % _new_score
+		var best := int(state.get("highest_score")) if state else 0
+		score_label.text = "Score %d    Best %d" % [_new_score, best]
 
 
 func _on_player_damaged(_new_health: int) -> void:
