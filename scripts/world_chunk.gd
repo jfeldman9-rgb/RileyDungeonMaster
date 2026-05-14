@@ -422,6 +422,7 @@ func _build_clearing_landmark(center: Vector3, color: Color) -> void:
 	ring.material_override = _make_emissive_material(color, 0.18)
 	add_child(ring)
 	_add_ground_glow(center, color, 0.38)
+	_add_moonbeam(center + Vector3.UP * 0.1, color)
 
 
 func _build_tower_landmark(center: Vector3, color: Color) -> void:
@@ -434,6 +435,7 @@ func _build_tower_landmark(center: Vector3, color: Color) -> void:
 	_add_banner(center + Vector3(-3.0, 2.7, -4.4), BANNER_C)
 	_add_banner(center + Vector3(3.0, 2.7, -4.4), BANNER_C)
 	_add_crystal_cluster(center + Vector3(0.0, 0.7, 4.2), color)
+	_add_moonbeam(center, color)
 	var light := OmniLight3D.new()
 	light.position = center + Vector3(0.0, 4.8, 0.0)
 	light.light_color = color
@@ -456,6 +458,7 @@ func _build_courtyard_landmark(center: Vector3, color: Color) -> void:
 	_add_banner(center + Vector3(-3.2, 2.0, -5.05), BANNER_A)
 	_add_banner(center + Vector3(3.2, 2.0, -5.05), BANNER_A)
 	_add_crystal_cluster(center + Vector3(0.0, 0.5, 0.0), Color(1.0, 0.65, 0.25))
+	_add_moonbeam(center, Color(1.0, 0.62, 0.22))
 
 
 func _build_bridge_landmark(center: Vector3, color: Color) -> void:
@@ -477,6 +480,7 @@ func _build_library_landmark(center: Vector3, color: Color) -> void:
 	_add_banner(center + Vector3(0.0, 2.1, -2.78), BANNER_B)
 	_add_crystal_cluster(center + Vector3(-4.0, 0.45, 1.8), Color(0.35, 0.65, 1.0))
 	_add_crystal_cluster(center + Vector3(4.0, 0.45, 1.8), Color(0.35, 0.65, 1.0))
+	_add_moonbeam(center, Color(0.32, 0.48, 1.0))
 
 
 func _build_garden_landmark(center: Vector3, color: Color) -> void:
@@ -498,6 +502,7 @@ func _build_garden_landmark(center: Vector3, color: Color) -> void:
 	_add_ground_glow(center + Vector3.UP * 0.04, Color(0.2, 0.95, 0.24), 0.5)
 	_add_crystal_cluster(center + Vector3(-4.8, 0.45, -2.2), Color(0.3, 1.0, 0.36))
 	_add_crystal_cluster(center + Vector3(4.8, 0.45, 2.2), Color(0.3, 1.0, 0.36))
+	_add_moonbeam(center, Color(0.22, 1.0, 0.35))
 
 
 func _build_crypt_landmark(center: Vector3, color: Color) -> void:
@@ -509,6 +514,7 @@ func _build_crypt_landmark(center: Vector3, color: Color) -> void:
 		_add_torch(center + Vector3(x, 2.95, 2.2), Color(1.0, 0.72, 0.22))
 	_add_banner(center + Vector3(0.0, 2.2, 1.0), BANNER_C)
 	_add_crystal_cluster(center + Vector3(0.0, 0.45, 3.2), Color(1.0, 0.72, 0.28))
+	_add_moonbeam(center, Color(1.0, 0.72, 0.28))
 
 
 func _add_box(center: Vector3, size: Vector3, color: Color) -> void:
@@ -638,6 +644,18 @@ func _add_ground_glow(local_pos: Vector3, color: Color, energy: float) -> void:
 	light.light_energy = energy
 	light.omni_range = 10.0
 	add_child(light)
+
+
+func _add_moonbeam(local_pos: Vector3, color: Color) -> void:
+	var beam := SpotLight3D.new()
+	beam.position = local_pos + Vector3(0.0, 12.0, 5.0)
+	beam.transform = beam.transform.looking_at(local_pos + Vector3.UP * 0.5, Vector3.UP)
+	beam.light_color = color.lightened(0.25)
+	beam.light_energy = 3.2
+	beam.spot_range = 18.0
+	beam.spot_angle = 24.0
+	beam.shadow_enabled = true
+	add_child(beam)
 
 
 func _add_banner(local_pos: Vector3, texture: Texture2D) -> void:
