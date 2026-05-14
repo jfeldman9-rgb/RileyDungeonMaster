@@ -1,6 +1,8 @@
 extends Node
 class_name GlobalState
 
+const SaveDataScript := preload("res://scripts/save_data.gd")
+
 signal player_damaged(new_health: int)
 signal player_died
 signal score_changed(new_score: int)
@@ -17,6 +19,14 @@ var max_star_ammo := 32
 var collected_seals := {"library": false, "garden": false, "crypt": false}
 var collected_shrines := {}
 var discovered_regions := {}
+var highest_score := 0
+var highest_seals := 0
+
+
+func _ready() -> void:
+	var data := SaveDataScript.load_data()
+	highest_score = int(data.get("highest_score", 0))
+	highest_seals = int(data.get("highest_seals", 0))
 
 
 func reset_run() -> void:
@@ -33,6 +43,9 @@ func reset_run() -> void:
 
 func add_score(amount: int) -> void:
 	score += amount
+	if score > highest_score:
+		highest_score = score
+		_save_progress()
 	score_changed.emit(score)
 
 
@@ -53,6 +66,9 @@ func collect_seal(seal_id: String) -> int:
 		return seal_count()
 	collected_seals[seal_id] = true
 	var count := seal_count()
+	if count > highest_seals:
+		highest_seals = count
+		_save_progress()
 	seal_collected.emit(seal_id, count)
 	if count >= 3:
 		boss_gate_opened.emit()
@@ -89,3 +105,10 @@ func discover_region(region_name: String) -> void:
 		return
 	discovered_regions[region_name] = true
 	region_discovered.emit(region_name)
+
+
+func _save_progress() -> void:
+	SaveDataScript.save({
+		"highest_score": highest_score,
+		"highest_seals": highest_seals
+	})
