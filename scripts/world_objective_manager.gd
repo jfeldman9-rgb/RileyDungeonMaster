@@ -1,6 +1,9 @@
 extends Node3D
 class_name WorldObjectiveManager
 
+const KENZIE_FRONT := preload("res://assets/generated/kenzie_front.png")
+const BROCCOLI_SHIELD := preload("res://assets/generated/broccoli_shield.png")
+
 @export var player_path: NodePath
 @export var ui_path: NodePath
 @export var collect_radius := 2.2
@@ -148,6 +151,14 @@ func _build_distant_kenzie_tower() -> void:
 	kenzie.material_override = _make_emissive_material(Color(0.65, 0.2, 0.95), 1.1)
 	tower.add_child(kenzie)
 	kenzie_avatar = kenzie
+	var kenzie_sprite := Sprite3D.new()
+	kenzie_sprite.name = "KenziePaintedDetail"
+	kenzie_sprite.texture = KENZIE_FRONT
+	kenzie_sprite.pixel_size = 0.006
+	kenzie_sprite.position = Vector3(0.0, 7.55, -1.78)
+	kenzie_sprite.modulate = Color(1, 1, 1, 0.9)
+	kenzie_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	tower.add_child(kenzie_sprite)
 	var shield := MeshInstance3D.new()
 	var shield_mesh := TorusMesh.new()
 	shield_mesh.inner_radius = 1.4
@@ -159,12 +170,47 @@ func _build_distant_kenzie_tower() -> void:
 	shield.material_override = _make_emissive_material(Color(0.3, 1.0, 0.34), 1.35)
 	tower.add_child(shield)
 	kenzie_shield = shield
+	var shield_sprite := Sprite3D.new()
+	shield_sprite.name = "BroccoliShieldPaintedDetail"
+	shield_sprite.texture = BROCCOLI_SHIELD
+	shield_sprite.pixel_size = 0.009
+	shield_sprite.position = kenzie.position
+	shield_sprite.modulate = Color(0.8, 1.0, 0.75, 0.6)
+	shield_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	tower.add_child(shield_sprite)
+	_add_kenzie_aura(tower)
 	var light := OmniLight3D.new()
 	light.position = Vector3(0.0, 7.5, -1.5)
 	light.light_color = Color(0.75, 0.28, 1.0)
 	light.light_energy = 3.4
 	light.omni_range = 42.0
 	tower.add_child(light)
+
+
+func _add_kenzie_aura(parent: Node3D) -> void:
+	var particles := GPUParticles3D.new()
+	particles.name = "KenzieAura"
+	particles.position = Vector3(0.0, 7.4, -1.5)
+	particles.amount = 90
+	particles.lifetime = 1.4
+	particles.emitting = true
+	particles.visibility_aabb = AABB(Vector3(-6, -4, -6), Vector3(12, 10, 12))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	process.emission_sphere_radius = 1.5
+	process.direction = Vector3(0, 1, 0)
+	process.spread = 85.0
+	process.initial_velocity_min = 0.4
+	process.initial_velocity_max = 1.6
+	process.gravity = Vector3(0, 0.25, 0)
+	process.scale_min = 0.045
+	process.scale_max = 0.12
+	particles.process_material = process
+	var mote_mesh := SphereMesh.new()
+	mote_mesh.radius = 0.06
+	mote_mesh.height = 0.12
+	particles.draw_pass_1 = mote_mesh
+	parent.add_child(particles)
 
 
 func _build_valley_backdrop() -> void:
