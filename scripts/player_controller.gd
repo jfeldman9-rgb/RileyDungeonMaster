@@ -30,10 +30,12 @@ var dash_direction := Vector3.FORWARD
 var dash_timer := 0.0
 var action_timer := 0.0
 var dash_trail_timer := 0.0
+var sword_light: OmniLight3D
 
 
 func _ready() -> void:
 	floor_snap_length = 0.45
+	sword_light = find_child("SwordLight", true, false) as OmniLight3D
 
 
 func set_camera_yaw(next_yaw: float) -> void:
@@ -81,6 +83,7 @@ func _physics_process(delta: float) -> void:
 		if dash_trail_timer <= 0.0:
 			dash_trail_timer = 0.055
 			_spawn_dash_afterimage()
+	_update_sword_light(delta)
 
 
 func update_state_timers(delta: float) -> void:
@@ -220,6 +223,17 @@ func _spawn_slash_fx() -> void:
 	tween.tween_property(slash, "scale", Vector3(1.65, 1.65, 1.65), 0.16)
 	tween.parallel().tween_property(slash, "modulate:a", 0.0, 0.16)
 	tween.finished.connect(slash.queue_free)
+
+
+func _update_sword_light(delta: float) -> void:
+	if not sword_light:
+		return
+	var attack_boost := 1.0 if state == State.ATTACKING else 0.0
+	var dash_boost := 0.45 if state == State.DASHING else 0.0
+	var target_energy := 1.2 + attack_boost * 4.4 + dash_boost * 1.5
+	var target_range := 4.2 + attack_boost * 2.8 + dash_boost * 1.4
+	sword_light.light_energy = lerpf(sword_light.light_energy, target_energy, minf(1.0, 18.0 * delta))
+	sword_light.omni_range = lerpf(sword_light.omni_range, target_range, minf(1.0, 14.0 * delta))
 
 
 func _add_score(amount: int) -> void:
