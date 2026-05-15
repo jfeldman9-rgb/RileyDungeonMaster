@@ -207,6 +207,21 @@ func _apply_slice_hit() -> void:
 		enemy_3d.queue_free()
 		_add_score(15)
 		break
+	for projectile in get_tree().get_nodes_in_group("enemy_projectile"):
+		if not is_instance_valid(projectile) or not projectile is Node3D:
+			continue
+		var projectile_3d := projectile as Node3D
+		var to_projectile := projectile_3d.global_position - global_position
+		to_projectile.y = 0.0
+		if to_projectile.length() > slice_range + 0.45:
+			continue
+		if facing_direction.dot(to_projectile.normalized()) < slice_arc_dot:
+			continue
+		_spawn_hit_pop(projectile_3d.global_position)
+		enemy_sliced.emit(projectile_3d.global_position)
+		projectile_3d.queue_free()
+		_add_score(5)
+		break
 
 
 func _spawn_ninja_star() -> void:

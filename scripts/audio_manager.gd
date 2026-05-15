@@ -12,6 +12,7 @@ var music_player: AudioStreamPlayer
 var combat_player: AudioStreamPlayer
 var ambient_player: AudioStreamPlayer
 var sfx_player: AudioStreamPlayer
+var enemy_manager: Node
 var combat_intensity := 0.0
 var connected_scene: Node
 
@@ -61,7 +62,7 @@ func _connect_scene_signals() -> void:
 		_connect_if_present(player, "dash_requested", Callable(self, "_on_dash"))
 		_connect_if_present(player, "star_requested", Callable(self, "_on_star"))
 		_connect_if_present(player, "enemy_sliced", Callable(self, "_on_enemy_sliced"))
-	var enemy_manager := scene.get_node_or_null("EnemyManager")
+	enemy_manager = scene.get_node_or_null("EnemyManager")
 	if enemy_manager:
 		_connect_if_present(enemy_manager, "enemy_spawned", Callable(self, "_on_enemy_spawned"))
 		_connect_if_present(enemy_manager, "enemy_removed", Callable(self, "_on_enemy_removed"))
@@ -92,6 +93,8 @@ func set_combat_active(active: bool) -> void:
 func _process(delta: float) -> void:
 	if not connected_scene:
 		_connect_scene_signals()
+	if enemy_manager and enemy_manager.has_method("active_count"):
+		combat_intensity = 1.0 if int(enemy_manager.call("active_count")) > 0 else 0.0
 	if combat_player:
 		var target_db := combat_volume_db if combat_intensity > 0.5 else -80.0
 		combat_player.volume_db = lerpf(combat_player.volume_db, target_db, minf(1.0, fade_speed * delta))

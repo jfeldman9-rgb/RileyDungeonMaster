@@ -175,6 +175,7 @@ func _remove_projectile(projectile: Node3D, index: int) -> void:
 func _spawn_broccoli_projectile(origin: Vector3, target: Vector3) -> void:
 	var projectile := Node3D.new()
 	projectile.name = "BroccoliProjectile"
+	projectile.add_to_group("enemy_projectile")
 	var sprite := Sprite3D.new()
 	var textures := [BROCCOLI_A, BROCCOLI_B, BROCCOLI_C]
 	sprite.texture = textures[randi() % textures.size()]
