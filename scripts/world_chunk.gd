@@ -861,6 +861,17 @@ func _add_column(center: Vector3, radius: float, height: float, color: Color) ->
 	marker.mesh = mesh
 	marker.material_override = _make_stone_material(color)
 	body.add_child(marker)
+	for y in [-height * 0.5, height * 0.5]:
+		var cap := MeshInstance3D.new()
+		var cap_mesh := CylinderMesh.new()
+		cap_mesh.top_radius = radius * 1.55
+		cap_mesh.bottom_radius = radius * 1.72
+		cap_mesh.height = 0.22
+		cap_mesh.radial_segments = 8
+		cap.mesh = cap_mesh
+		cap.position.y = y
+		cap.material_override = _make_stone_material(color.lightened(0.05))
+		body.add_child(cap)
 	var shape := CollisionShape3D.new()
 	var cylinder := CylinderShape3D.new()
 	cylinder.radius = radius * 1.2

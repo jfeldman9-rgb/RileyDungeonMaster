@@ -426,6 +426,17 @@ func _add_column(parent: Node, center: Vector3, radius: float, height: float, co
 	node.position = center
 	node.material_override = _make_stone_material(color)
 	parent.add_child(node)
+	for y in [-height * 0.5, height * 0.5]:
+		var cap := MeshInstance3D.new()
+		var cap_mesh := CylinderMesh.new()
+		cap_mesh.top_radius = radius * 1.55
+		cap_mesh.bottom_radius = radius * 1.72
+		cap_mesh.height = 0.22
+		cap_mesh.radial_segments = 8
+		cap.mesh = cap_mesh
+		cap.position = center + Vector3.UP * y
+		cap.material_override = _make_stone_material(color.lightened(0.05))
+		parent.add_child(cap)
 
 
 func _collect_seal(seal_id: String, pickup: Node3D) -> void:
