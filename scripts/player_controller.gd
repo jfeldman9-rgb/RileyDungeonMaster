@@ -42,12 +42,41 @@ var painted_sprite: Sprite3D
 
 func _ready() -> void:
 	floor_snap_length = 0.45
+	_add_hero_shadow_and_rim()
 	sword_light = find_child("SwordLight", true, false) as OmniLight3D
 	sword_node = find_child("Sword", true, false) as Node3D
 	if sword_node:
 		sword_base_position = sword_node.position
 		sword_base_rotation = sword_node.rotation
 	painted_sprite = find_child("PaintedBack", true, false) as Sprite3D
+
+
+func _add_hero_shadow_and_rim() -> void:
+	if has_node("HeroContactShadow"):
+		return
+	var shadow := MeshInstance3D.new()
+	shadow.name = "HeroContactShadow"
+	var shadow_mesh := CylinderMesh.new()
+	shadow_mesh.top_radius = 0.62
+	shadow_mesh.bottom_radius = 0.62
+	shadow_mesh.height = 0.012
+	shadow_mesh.radial_segments = 28
+	shadow.mesh = shadow_mesh
+	shadow.position = Vector3(0.0, 0.035, 0.0)
+	shadow.scale = Vector3(1.25, 1.0, 0.72)
+	var shadow_mat := StandardMaterial3D.new()
+	shadow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	shadow_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.36)
+	shadow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	shadow.material_override = shadow_mat
+	add_child(shadow)
+	var rim := OmniLight3D.new()
+	rim.name = "HeroRimLight"
+	rim.position = Vector3(0.0, 1.35, 0.85)
+	rim.light_color = Color(0.45, 0.82, 1.0)
+	rim.light_energy = 0.42
+	rim.omni_range = 3.2
+	add_child(rim)
 
 
 func set_camera_yaw(next_yaw: float) -> void:

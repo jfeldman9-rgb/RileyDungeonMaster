@@ -216,6 +216,22 @@ func _damage_player() -> void:
 func make_placeholder_enemy() -> Node3D:
 	var enemy := Node3D.new()
 	enemy.name = "PooledEnemyPlaceholder"
+	var shadow := MeshInstance3D.new()
+	shadow.name = "MonsterContactShadow"
+	var shadow_mesh := CylinderMesh.new()
+	shadow_mesh.top_radius = 0.56
+	shadow_mesh.bottom_radius = 0.56
+	shadow_mesh.height = 0.012
+	shadow_mesh.radial_segments = 18
+	shadow.mesh = shadow_mesh
+	shadow.position.y = 0.025
+	shadow.scale = Vector3(1.15, 1.0, 0.72)
+	var shadow_mat := StandardMaterial3D.new()
+	shadow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	shadow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	shadow_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.32)
+	shadow.material_override = shadow_mat
+	enemy.add_child(shadow)
 	var stalk_mat := _make_enemy_material(Color(0.36, 0.42, 0.16), Color(0.08, 0.18, 0.04), 0.22)
 	var floret_mat := _make_enemy_material(Color(0.12, 0.42, 0.13), Color(0.02, 0.22, 0.04), 0.42)
 
