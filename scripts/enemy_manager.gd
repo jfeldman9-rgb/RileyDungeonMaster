@@ -159,10 +159,12 @@ func update_projectiles(delta: float) -> void:
 		projectile.rotate_y(delta * 5.5)
 		projectile.rotate_z(delta * 4.0)
 		if player and projectile.global_position.distance_to(player.global_position + Vector3.UP * 0.7) <= 0.72:
+			_spawn_projectile_pop(projectile.global_position)
 			_damage_player()
 			_remove_projectile(projectile, i)
 			continue
 		if life <= 0.0 or (player and projectile.global_position.distance_to(player.global_position) > despawn_radius):
+			_spawn_projectile_pop(projectile.global_position)
 			_remove_projectile(projectile, i)
 
 
@@ -205,6 +207,23 @@ func _spawn_broccoli_projectile(origin: Vector3, target: Vector3) -> void:
 	parent.add_child(projectile)
 	active_projectiles.append(projectile)
 	broccoli_projectile_fired.emit(origin)
+
+
+func _spawn_projectile_pop(origin: Vector3) -> void:
+	var ring := MeshInstance3D.new()
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.22
+	ring_mesh.outer_radius = 0.28
+	ring_mesh.ring_segments = 24
+	ring.mesh = ring_mesh
+	ring.global_position = origin
+	ring.material_override = _make_enemy_material(Color(0.55, 1.0, 0.28, 0.72), Color(0.28, 1.0, 0.16), 0.85)
+	var parent := world if world else get_tree().current_scene
+	parent.add_child(ring)
+	var tween := ring.create_tween()
+	tween.tween_property(ring, "scale", Vector3(2.2, 2.2, 2.2), 0.2)
+	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.2)
+	tween.finished.connect(ring.queue_free)
 
 
 func _damage_player() -> void:
