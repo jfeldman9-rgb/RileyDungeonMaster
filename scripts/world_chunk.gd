@@ -204,11 +204,15 @@ func _build_path_marks() -> void:
 				continue
 			var local_pos := Vector3(world_pos.x - position.x, 0.0, world_pos.z - position.z)
 			local_pos.y = sample_height(local_pos.x, local_pos.z) + 0.045
-			_add_path_slab(local_pos, dir, 3.8 + sin(t * PI) * 1.4)
+			var path_width := 3.8 + sin(t * PI) * 1.4
+			_add_path_slab(local_pos, dir, path_width)
 			if i % 5 == 0:
 				var side := Vector3(-dir.z, 0.0, dir.x) * (2.9 if (i / 5) % 2 == 0 else -2.9)
 				var lantern_pos := local_pos + side + Vector3.UP * 1.05
 				_add_torch(lantern_pos, Color(1.0, 0.52, 0.18))
+			if i > 0 and i < steps and i % 8 == 0:
+				var gate_center := local_pos + Vector3.UP * 0.32
+				_add_route_marker_gate(gate_center, dir, path_width + 1.2)
 
 
 func _build_path_edge_details() -> void:
@@ -829,6 +833,14 @@ func _add_grass_tuft(local_pos: Vector3, scale: float, rng: RandomNumberGenerato
 		blade.rotation_degrees = Vector3(rng.randf_range(-12.0, 12.0), rng.randf_range(0.0, 360.0), rng.randf_range(-12.0, 12.0))
 		blade.material_override = _make_material(Color(0.11, 0.30, 0.09), 0.96)
 		add_child(blade)
+
+
+func _add_route_marker_gate(local_pos: Vector3, dir: Vector3, width: float) -> void:
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	for side_sign in [-1.0, 1.0]:
+		var post_pos: Vector3 = local_pos + side * float(side_sign) * width * 0.56
+		_add_column(post_pos + Vector3.UP * 1.15, 0.18, 2.3, Color(0.28, 0.24, 0.19))
+		_add_torch(post_pos + Vector3.UP * 2.55, Color(1.0, 0.50, 0.18))
 
 
 func _add_box(center: Vector3, size: Vector3, color: Color) -> void:
