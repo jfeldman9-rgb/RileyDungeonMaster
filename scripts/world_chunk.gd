@@ -241,10 +241,14 @@ func _build_path_edge_details() -> void:
 
 func _add_path_slab(local_pos: Vector3, dir: Vector3, width: float) -> void:
 	var path := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(width, 0.05, 4.8)
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 1.0
+	mesh.bottom_radius = 1.0
+	mesh.height = 0.045
+	mesh.radial_segments = 22
 	path.mesh = mesh
 	path.position = local_pos
+	path.scale = Vector3(width * 0.5, 1.0, 2.75)
 	path.rotation.y = atan2(dir.x, dir.z)
 	path.material_override = _make_path_material(local_pos)
 	add_child(path)
