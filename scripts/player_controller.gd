@@ -184,12 +184,6 @@ func _spawn_ninja_star() -> void:
 	var star := Node3D.new()
 	star.name = "NinjaStarProjectile"
 	star.set_script(NinjaStarProjectileScript)
-	var blade := MeshInstance3D.new()
-	var mesh := TorusMesh.new()
-	mesh.inner_radius = 0.16
-	mesh.outer_radius = 0.26
-	mesh.ring_segments = 18
-	blade.mesh = mesh
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color(0.72, 0.92, 1.0)
 	material.metallic = 0.55
@@ -197,8 +191,23 @@ func _spawn_ninja_star() -> void:
 	material.emission_enabled = true
 	material.emission = Color(0.34, 0.72, 1.0)
 	material.emission_energy_multiplier = 0.55
-	blade.material_override = material
-	star.add_child(blade)
+	for i in range(4):
+		var blade := MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(0.42, 0.045, 0.11)
+		blade.mesh = mesh
+		blade.rotation_degrees.y = float(i) * 90.0
+		blade.material_override = material
+		star.add_child(blade)
+	var hub := MeshInstance3D.new()
+	var hub_mesh := SphereMesh.new()
+	hub_mesh.radius = 0.08
+	hub_mesh.height = 0.16
+	hub_mesh.radial_segments = 8
+	hub_mesh.rings = 4
+	hub.mesh = hub_mesh
+	hub.material_override = material
+	star.add_child(hub)
 	get_tree().current_scene.add_child(star)
 	star.call("launch", global_position + Vector3.UP * 0.8 + facing_direction * 0.65, facing_direction)
 
