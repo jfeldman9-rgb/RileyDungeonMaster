@@ -5,11 +5,27 @@ class_name VisualDirector
 @export var sun_path: NodePath
 @export var moon_path: NodePath
 
+var horizon_root: Node3D
+
 
 func _ready() -> void:
 	_apply_environment()
 	_apply_lighting()
 	call_deferred("_build_horizon_accents")
+
+
+func _process(delta: float) -> void:
+	if not horizon_root:
+		return
+	var time := Time.get_ticks_msec() * 0.001
+	for child in horizon_root.get_children():
+		if not child is Node3D:
+			continue
+		var node := child as Node3D
+		var base := node.get_meta("base_pos", node.position) as Vector3
+		var drift := float(node.get_meta("drift", 0.0))
+		var phase := float(node.get_meta("phase", 0.0))
+		node.position = base + Vector3(sin(time * drift + phase) * 2.2, sin(time * drift * 0.7 + phase) * 0.28, 0.0)
 
 
 func _apply_environment() -> void:
@@ -80,6 +96,7 @@ func _build_horizon_accents() -> void:
 	var root := Node3D.new()
 	root.name = "VisualHorizonAccents"
 	parent.add_child(root)
+	horizon_root = root
 	_add_cloud_band(root, Vector3(-52.0, 34.0, -142.0), Vector3(72.0, 4.8, 0.1), Color(0.38, 0.30, 0.56, 0.20))
 	_add_cloud_band(root, Vector3(36.0, 29.0, -128.0), Vector3(88.0, 5.2, 0.1), Color(0.62, 0.36, 0.46, 0.16))
 	_add_cloud_band(root, Vector3(-86.0, 24.0, -96.0), Vector3(50.0, 3.6, 0.1), Color(0.24, 0.32, 0.55, 0.18))
@@ -101,6 +118,9 @@ func _add_cloud_band(parent: Node3D, pos: Vector3, size: Vector3, color: Color) 
 	material.emission = Color(color.r, color.g, color.b)
 	material.emission_energy_multiplier = 0.18
 	band.material_override = material
+	band.set_meta("base_pos", pos)
+	band.set_meta("drift", randf_range(0.035, 0.075))
+	band.set_meta("phase", randf() * TAU)
 	parent.add_child(band)
 
 
@@ -120,4 +140,7 @@ func _add_moon_disc(parent: Node3D) -> void:
 	material.emission = Color(0.46, 0.56, 1.0)
 	material.emission_energy_multiplier = 0.52
 	moon.material_override = material
+	moon.set_meta("base_pos", moon.position)
+	moon.set_meta("drift", 0.018)
+	moon.set_meta("phase", 1.7)
 	parent.add_child(moon)
