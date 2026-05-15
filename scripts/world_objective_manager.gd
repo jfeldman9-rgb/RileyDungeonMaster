@@ -108,8 +108,32 @@ func _build_seal_pickups() -> void:
 		ring.rotation_degrees.x = 90.0
 		ring.material_override = _make_emissive_material(def["color"] as Color, 0.75)
 		pickup.add_child(ring)
+		_add_seal_pedestal(pickup, def["color"] as Color)
 		_add_seal_beacon(pickup, def["color"] as Color)
 		pickups[seal_id] = pickup
+
+
+func _add_seal_pedestal(parent: Node3D, color: Color) -> void:
+	var base := MeshInstance3D.new()
+	var base_mesh := CylinderMesh.new()
+	base_mesh.top_radius = 1.05
+	base_mesh.bottom_radius = 1.25
+	base_mesh.height = 0.38
+	base_mesh.radial_segments = 10
+	base.mesh = base_mesh
+	base.position = Vector3(0.0, -0.7, 0.0)
+	base.material_override = _make_stone_material(color.darkened(0.45))
+	parent.add_child(base)
+	var rune_ring := MeshInstance3D.new()
+	var rune_mesh := TorusMesh.new()
+	rune_mesh.inner_radius = 1.18
+	rune_mesh.outer_radius = 1.28
+	rune_mesh.ring_segments = 36
+	rune_ring.mesh = rune_mesh
+	rune_ring.position = Vector3(0.0, -0.48, 0.0)
+	rune_ring.rotation_degrees.x = 90.0
+	rune_ring.material_override = _make_emissive_material(color, 0.65)
+	parent.add_child(rune_ring)
 
 
 func _build_kenzie_gate() -> void:
