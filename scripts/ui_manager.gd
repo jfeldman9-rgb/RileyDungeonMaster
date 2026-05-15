@@ -15,6 +15,7 @@ var region_label: Label
 var objective_label: Label
 var message_label: Label
 var gate_progress: ProgressBar
+var damage_flash: ColorRect
 var story_panel: PanelContainer
 var story_title: Label
 var story_body: Label
@@ -89,6 +90,7 @@ func _build_hud() -> void:
 	message_label.offset_bottom = 190
 	message_label.modulate.a = 0.0
 	add_child(message_label)
+	_build_damage_flash()
 	_build_adventure_frames()
 	_build_story_panel()
 
@@ -131,6 +133,15 @@ func _build_story_panel() -> void:
 	story_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(story_body)
 	_build_portraits()
+
+
+func _build_damage_flash() -> void:
+	damage_flash = ColorRect.new()
+	damage_flash.name = "DamageFlash"
+	damage_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	damage_flash.color = Color(0.9, 0.02, 0.0, 0.0)
+	add_child(damage_flash)
 
 
 func _build_portraits() -> void:
@@ -300,6 +311,10 @@ func _on_player_damaged(_new_health: int) -> void:
 		show_message("RILEY DOWN", "Retreat to the clearing and try again.")
 	else:
 		show_message("HIT", "Broccoli monster got through.")
+	if damage_flash:
+		var tween := damage_flash.create_tween()
+		tween.tween_property(damage_flash, "color:a", 0.32, 0.055)
+		tween.tween_property(damage_flash, "color:a", 0.0, 0.34)
 
 
 func _on_seal_collected(seal_id: String, count: int) -> void:

@@ -34,12 +34,19 @@ var dash_timer := 0.0
 var action_timer := 0.0
 var dash_trail_timer := 0.0
 var sword_light: OmniLight3D
+var sword_node: Node3D
+var sword_base_position := Vector3.ZERO
+var sword_base_rotation := Vector3.ZERO
 var painted_sprite: Sprite3D
 
 
 func _ready() -> void:
 	floor_snap_length = 0.45
 	sword_light = find_child("SwordLight", true, false) as OmniLight3D
+	sword_node = find_child("Sword", true, false) as Node3D
+	if sword_node:
+		sword_base_position = sword_node.position
+		sword_base_rotation = sword_node.rotation
 	painted_sprite = find_child("PaintedBack", true, false) as Sprite3D
 
 
@@ -89,6 +96,7 @@ func _physics_process(delta: float) -> void:
 			dash_trail_timer = 0.055
 			_spawn_dash_afterimage()
 	_update_painted_facing()
+	_update_sword_pose(delta)
 	_update_sword_light(delta)
 
 
@@ -251,6 +259,25 @@ func _update_sword_light(delta: float) -> void:
 	var target_range := 4.2 + attack_boost * 2.8 + dash_boost * 1.4
 	sword_light.light_energy = lerpf(sword_light.light_energy, target_energy, minf(1.0, 18.0 * delta))
 	sword_light.omni_range = lerpf(sword_light.omni_range, target_range, minf(1.0, 14.0 * delta))
+
+
+func _update_sword_pose(delta: float) -> void:
+	if not sword_node:
+		return
+	var target_pos := sword_base_position
+	var target_rot := sword_base_rotation
+	if state == State.ATTACKING:
+		var t := 1.0 - clampf(action_timer / maxf(0.001, attack_duration), 0.0, 1.0)
+		var arc := sin(t * PI)
+		target_pos += Vector3(0.12, 0.04, -0.18) * arc
+		target_rot = sword_base_rotation + Vector3(0.18 * arc, 1.8 * (t - 0.5), -1.05 * arc)
+	elif state == State.DASHING:
+		target_pos += Vector3(0.08, -0.05, -0.12)
+		target_rot = sword_base_rotation + Vector3(0.22, 0.2, -0.35)
+	sword_node.position = sword_node.position.lerp(target_pos, minf(1.0, 24.0 * delta))
+	sword_node.rotation.x = lerp_angle(sword_node.rotation.x, target_rot.x, minf(1.0, 24.0 * delta))
+	sword_node.rotation.y = lerp_angle(sword_node.rotation.y, target_rot.y, minf(1.0, 24.0 * delta))
+	sword_node.rotation.z = lerp_angle(sword_node.rotation.z, target_rot.z, minf(1.0, 24.0 * delta))
 
 
 func _add_score(amount: int) -> void:

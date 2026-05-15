@@ -92,6 +92,7 @@ func generate(coord: Vector2i, size: float, world_seed: int = 1337) -> void:
 	_build_foliage()
 	_build_scattered_adventure_props()
 	_build_valley_edge_silhouettes()
+	_build_ground_fog_multimesh()
 	_build_atmosphere_motes()
 	_build_landmark_markers()
 
@@ -321,6 +322,40 @@ func _build_atmosphere_motes() -> void:
 		mote.set_meta("phase", rng.randf_range(0.0, TAU))
 		atmosphere_motes.append(mote)
 		add_child(mote)
+
+
+func _build_ground_fog_multimesh() -> void:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 1.0
+	mesh.bottom_radius = 1.0
+	mesh.height = 0.018
+	mesh.radial_segments = 22
+	var count := 34 if abs(chunk_coord.x) <= 1 and abs(chunk_coord.y) <= 2 else 18
+	var mm := MultiMesh.new()
+	mm.mesh = mesh
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = count
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed + chunk_coord.x * 100003 + chunk_coord.y * 100019
+	for i in range(count):
+		var lx := rng.randf_range(-chunk_size * 0.48, chunk_size * 0.48)
+		var lz := rng.randf_range(-chunk_size * 0.48, chunk_size * 0.48)
+		var scale := rng.randf_range(2.0, 5.8)
+		var t := Transform3D(Basis().scaled(Vector3(scale * rng.randf_range(1.1, 2.4), 1.0, scale * rng.randf_range(0.45, 0.9))), Vector3(lx, sample_height(lx, lz) + 0.07, lz))
+		t.basis = t.basis.rotated(Vector3.UP, rng.randf_range(0.0, TAU))
+		mm.set_instance_transform(i, t)
+	var fog := MultiMeshInstance3D.new()
+	fog.name = "GroundFogWisps"
+	fog.multimesh = mm
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(0.34, 0.38, 0.52, 0.075)
+	material.emission_enabled = true
+	material.emission = Color(0.16, 0.19, 0.32)
+	material.emission_energy_multiplier = 0.08
+	fog.material_override = material
+	add_child(fog)
 
 
 func _near_major_path(world_pos: Vector3, radius: float) -> bool:
