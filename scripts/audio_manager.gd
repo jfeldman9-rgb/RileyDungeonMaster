@@ -19,6 +19,9 @@ var connected_scene: Node
 
 
 func _ready() -> void:
+	if DisplayServer.get_name() == "headless":
+		call_deferred("_connect_scene_signals")
+		return
 	music_player = get_node_or_null(music_player_path) as AudioStreamPlayer
 	combat_player = get_node_or_null(combat_player_path) as AudioStreamPlayer
 	if not music_player:
