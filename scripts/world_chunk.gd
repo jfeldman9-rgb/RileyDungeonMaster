@@ -4,9 +4,9 @@ class_name WorldChunk
 @export var chunk_size := 48.0
 @export var chunk_coord := Vector2i.ZERO
 @export var seed := 1337
-@export var terrain_resolution := 30
-@export var tree_count := 58
-@export var grass_count := 260
+@export var terrain_resolution := 42
+@export var tree_count := 74
+@export var grass_count := 360
 
 var generated := false
 var noise := FastNoiseLite.new()
