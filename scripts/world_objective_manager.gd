@@ -406,6 +406,7 @@ func _add_column(parent: Node, center: Vector3, radius: float, height: float, co
 
 func _collect_seal(seal_id: String, pickup: Node3D) -> void:
 	pickup.visible = false
+	_spawn_pickup_burst(pickup.global_position, (SEAL_DEFS[seal_id] as Dictionary)["color"] as Color)
 	seal_pickup_collected.emit(seal_id)
 	if state and state.has_method("collect_seal"):
 		state.call("collect_seal", seal_id)
@@ -446,6 +447,7 @@ func _on_player_slice() -> void:
 	if player_flat.distance_to(tower_flat) > 11.0:
 		return
 	boss_shield_hp = maxi(0, boss_shield_hp - 1)
+	_spawn_pickup_burst(Vector3(22.0, 7.5, -109.5), Color(0.52, 1.0, 0.28))
 	kenzie_shield_hit.emit(boss_shield_hp)
 	if ui:
 		ui.show_message("SHIELD HIT", "%d/5 shield layers remain." % boss_shield_hp)
@@ -482,6 +484,40 @@ func _update_boss_visuals(delta: float) -> void:
 		var angle := time * 0.9 + phase
 		orbiter.position = center + Vector3(cos(angle) * radius, height + sin(time * 1.6 + phase) * 0.4, sin(angle) * radius)
 		orbiter.rotation_degrees.z += delta * 110.0
+
+
+func _spawn_pickup_burst(origin: Vector3, color: Color) -> void:
+	for i in range(18):
+		var mote := MeshInstance3D.new()
+		var mesh := SphereMesh.new()
+		mesh.radius = 0.045 + float(i % 3) * 0.018
+		mesh.height = mesh.radius * 2.0
+		mesh.radial_segments = 7
+		mesh.rings = 4
+		mote.mesh = mesh
+		mote.global_position = origin
+		mote.material_override = _make_emissive_material(color.lightened(0.18), 0.95)
+		add_child(mote)
+		var angle := TAU * float(i) / 18.0
+		var target := origin + Vector3(cos(angle) * randf_range(1.0, 2.8), randf_range(0.7, 2.2), sin(angle) * randf_range(1.0, 2.8))
+		var tween := mote.create_tween()
+		tween.tween_property(mote, "global_position", target, 0.34).set_trans(Tween.TRANS_QUAD)
+		tween.parallel().tween_property(mote, "scale", Vector3.ZERO, 0.34)
+		tween.finished.connect(mote.queue_free)
+	var ring := MeshInstance3D.new()
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.9
+	ring_mesh.outer_radius = 1.02
+	ring_mesh.ring_segments = 42
+	ring.mesh = ring_mesh
+	ring.global_position = origin
+	ring.rotation_degrees.x = 90.0
+	ring.material_override = _make_emissive_material(color, 0.8)
+	add_child(ring)
+	var ring_tween := ring.create_tween()
+	ring_tween.tween_property(ring, "scale", Vector3(3.2, 3.2, 3.2), 0.42)
+	ring_tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.42)
+	ring_tween.finished.connect(ring.queue_free)
 
 
 func _update_region_label() -> void:
