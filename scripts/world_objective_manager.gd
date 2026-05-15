@@ -3,6 +3,8 @@ class_name WorldObjectiveManager
 
 const KENZIE_FRONT := preload("res://assets/generated/kenzie_front.png")
 const BROCCOLI_SHIELD := preload("res://assets/generated/broccoli_shield.png")
+const STONE_TILE_A := preload("res://assets/generated/stone_tile_a.png")
+const STONE_TILE_B := preload("res://assets/generated/stone_tile_b.png")
 
 @export var player_path: NodePath
 @export var ui_path: NodePath
@@ -336,7 +338,7 @@ func _add_box(parent: Node, center: Vector3, size: Vector3, color: Color) -> voi
 	mesh.size = size
 	node.mesh = mesh
 	node.position = center
-	node.material_override = _make_emissive_material(color, 0.08)
+	node.material_override = _make_stone_material(color)
 	parent.add_child(node)
 
 
@@ -349,7 +351,7 @@ func _add_column(parent: Node, center: Vector3, radius: float, height: float, co
 	mesh.radial_segments = 8
 	node.mesh = mesh
 	node.position = center
-	node.material_override = _make_emissive_material(color, 0.1)
+	node.material_override = _make_stone_material(color)
 	parent.add_child(node)
 
 
@@ -444,6 +446,19 @@ func _make_emissive_material(color: Color, energy: float) -> StandardMaterial3D:
 	material.emission_enabled = true
 	material.emission = color
 	material.emission_energy_multiplier = energy
+	return material
+
+
+func _make_stone_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color.lightened(0.08)
+	var brightness := (color.r + color.g + color.b) / 3.0
+	material.albedo_texture = STONE_TILE_A if brightness < 0.35 else STONE_TILE_B
+	material.roughness = 0.76
+	material.metallic = 0.02
+	material.emission_enabled = true
+	material.emission = color.darkened(0.25)
+	material.emission_energy_multiplier = 0.035
 	return material
 
 
