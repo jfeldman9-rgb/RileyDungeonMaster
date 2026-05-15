@@ -65,6 +65,7 @@ func _connect_scene_signals() -> void:
 	if enemy_manager:
 		_connect_if_present(enemy_manager, "enemy_spawned", Callable(self, "_on_enemy_spawned"))
 		_connect_if_present(enemy_manager, "enemy_removed", Callable(self, "_on_enemy_removed"))
+		_connect_if_present(enemy_manager, "broccoli_projectile_fired", Callable(self, "_on_broccoli_projectile_fired"))
 	var objectives := scene.get_node_or_null("WorldObjectives")
 	if objectives:
 		_connect_if_present(objectives, "seal_pickup_collected", Callable(self, "_on_seal_pickup"))
@@ -152,6 +153,10 @@ func _on_enemy_removed(_enemy: Node3D) -> void:
 	pass
 
 
+func _on_broccoli_projectile_fired(_position: Vector3) -> void:
+	play_sfx("broccoli_throw")
+
+
 func _on_seal_pickup(_seal_id: String) -> void:
 	play_sfx("powerup")
 
@@ -232,6 +237,8 @@ func make_sfx_stream(kind: String) -> AudioStreamWAV:
 			return make_wave_stream([164.81, 123.47, 92.5], 0.08, -0.16, false, 0.55)
 		"star":
 			return make_wave_stream([880.0, 1174.66, 1567.98], 0.032, -0.28, false, 0.7)
+		"broccoli_throw":
+			return make_wave_stream([196.0, 246.94, 196.0], 0.035, -0.34, false, 0.52)
 		"powerup":
 			return make_wave_stream([523.25, 659.25, 783.99, 1046.5], 0.045, -0.24, false, 0.6)
 		"enemy_stagger":
