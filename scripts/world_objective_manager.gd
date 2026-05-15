@@ -98,6 +98,7 @@ func _build_seal_pickups() -> void:
 		ring.rotation_degrees.x = 90.0
 		ring.material_override = _make_emissive_material(def["color"] as Color, 0.75)
 		pickup.add_child(ring)
+		_add_seal_beacon(pickup, def["color"] as Color)
 		pickups[seal_id] = pickup
 
 
@@ -139,6 +140,8 @@ func _build_distant_kenzie_tower() -> void:
 	tower.name = "DistantKenzieTower"
 	tower.position = Vector3(22.0, 0.0, -108.0)
 	add_child(tower)
+	for step in range(9):
+		_add_box(tower, Vector3(0.0, 0.16 + float(step) * 0.09, 11.5 - float(step) * 1.25), Vector3(8.8 - float(step) * 0.28, 0.28, 1.1), Color(0.22, 0.18, 0.23))
 	_add_box(tower, Vector3(0.0, 0.5, 0.0), Vector3(15.0, 1.0, 15.0), Color(0.18, 0.15, 0.20))
 	_add_box(tower, Vector3(0.0, 2.1, 0.0), Vector3(9.0, 3.2, 8.0), Color(0.24, 0.20, 0.28))
 	_add_box(tower, Vector3(0.0, 5.2, -1.5), Vector3(5.4, 3.4, 4.6), Color(0.18, 0.14, 0.23))
@@ -190,6 +193,22 @@ func _build_distant_kenzie_tower() -> void:
 	light.light_energy = 3.4
 	light.omni_range = 42.0
 	tower.add_child(light)
+	var sky_spire := MeshInstance3D.new()
+	var spire_mesh := CylinderMesh.new()
+	spire_mesh.top_radius = 0.2
+	spire_mesh.bottom_radius = 1.6
+	spire_mesh.height = 15.0
+	spire_mesh.radial_segments = 7
+	sky_spire.mesh = spire_mesh
+	sky_spire.position = Vector3(0.0, 14.2, -1.5)
+	sky_spire.material_override = _make_emissive_material(Color(0.18, 0.08, 0.32), 0.18)
+	tower.add_child(sky_spire)
+	var beacon := OmniLight3D.new()
+	beacon.position = Vector3(0.0, 15.5, -1.5)
+	beacon.light_color = Color(0.85, 0.35, 1.0)
+	beacon.light_energy = 4.8
+	beacon.omni_range = 56.0
+	tower.add_child(beacon)
 
 
 func _add_kenzie_aura(parent: Node3D) -> void:
@@ -216,6 +235,44 @@ func _add_kenzie_aura(parent: Node3D) -> void:
 	mote_mesh.height = 0.12
 	particles.draw_pass_1 = mote_mesh
 	parent.add_child(particles)
+
+
+func _add_seal_beacon(parent: Node3D, color: Color) -> void:
+	var beam := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.18
+	mesh.bottom_radius = 0.38
+	mesh.height = 9.0
+	mesh.radial_segments = 18
+	beam.mesh = mesh
+	beam.position = Vector3.UP * 4.5
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(color.r, color.g, color.b, 0.24)
+	material.emission_enabled = true
+	material.emission = color
+	material.emission_energy_multiplier = 0.72
+	material.roughness = 0.5
+	beam.material_override = material
+	parent.add_child(beam)
+
+	var halo := MeshInstance3D.new()
+	var halo_mesh := TorusMesh.new()
+	halo_mesh.inner_radius = 1.35
+	halo_mesh.outer_radius = 1.48
+	halo_mesh.ring_segments = 44
+	halo.mesh = halo_mesh
+	halo.position = Vector3.UP * 2.8
+	halo.rotation_degrees.x = 90.0
+	halo.material_override = _make_emissive_material(color, 0.9)
+	parent.add_child(halo)
+
+	var light := OmniLight3D.new()
+	light.position = Vector3.UP * 3.2
+	light.light_color = color
+	light.light_energy = 1.9
+	light.omni_range = 16.0
+	parent.add_child(light)
 
 
 func _build_valley_backdrop() -> void:

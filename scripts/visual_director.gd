@@ -9,6 +9,7 @@ class_name VisualDirector
 func _ready() -> void:
 	_apply_environment()
 	_apply_lighting()
+	call_deferred("_build_horizon_accents")
 
 
 func _apply_environment() -> void:
@@ -30,28 +31,28 @@ func _apply_environment() -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.fog_enabled = true
-	env.fog_density = 0.008
-	env.fog_light_color = Color(0.42, 0.36, 0.52)
+	env.fog_density = 0.007
+	env.fog_light_color = Color(0.46, 0.38, 0.58)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.16, 0.16, 0.24)
-	env.ambient_light_energy = 0.38
+	env.ambient_light_color = Color(0.18, 0.17, 0.26)
+	env.ambient_light_energy = 0.44
 	env.set("volumetric_fog_enabled", true)
 	env.set("volumetric_fog_density", 0.015)
 	env.set("volumetric_fog_albedo", Color(0.34, 0.30, 0.46))
 	env.set("volumetric_fog_emission", Color(0.04, 0.03, 0.09))
 	env.set("volumetric_fog_emission_energy", 0.42)
 	env.set("glow_enabled", true)
-	env.set("glow_intensity", 1.3)
-	env.set("glow_bloom", 0.55)
-	env.set("glow_strength", 1.2)
+	env.set("glow_intensity", 1.55)
+	env.set("glow_bloom", 0.72)
+	env.set("glow_strength", 1.32)
 	env.set("ssao_enabled", true)
 	env.set("ssao_radius", 3.2)
 	env.set("ssao_intensity", 3.1)
 	env.set("ssao_power", 1.65)
 	env.set("adjustment_enabled", true)
 	env.set("adjustment_brightness", 0.96)
-	env.set("adjustment_contrast", 1.24)
-	env.set("adjustment_saturation", 1.18)
+	env.set("adjustment_contrast", 1.28)
+	env.set("adjustment_saturation", 1.26)
 	env.set("dof_blur_far_enabled", true)
 	env.set("dof_blur_far_distance", 64.0)
 	env.set("dof_blur_far_transition", 28.0)
@@ -70,3 +71,53 @@ func _apply_lighting() -> void:
 		moon.light_color = Color(0.38, 0.48, 1.0)
 		moon.light_energy = 0.45
 		moon.shadow_enabled = true
+
+
+func _build_horizon_accents() -> void:
+	var parent := get_parent() as Node3D
+	if not parent or parent.has_node("VisualHorizonAccents"):
+		return
+	var root := Node3D.new()
+	root.name = "VisualHorizonAccents"
+	parent.add_child(root)
+	_add_cloud_band(root, Vector3(-52.0, 34.0, -142.0), Vector3(72.0, 4.8, 0.1), Color(0.38, 0.30, 0.56, 0.20))
+	_add_cloud_band(root, Vector3(36.0, 29.0, -128.0), Vector3(88.0, 5.2, 0.1), Color(0.62, 0.36, 0.46, 0.16))
+	_add_cloud_band(root, Vector3(-86.0, 24.0, -96.0), Vector3(50.0, 3.6, 0.1), Color(0.24, 0.32, 0.55, 0.18))
+	_add_cloud_band(root, Vector3(92.0, 23.0, -82.0), Vector3(54.0, 4.0, 0.1), Color(0.32, 0.26, 0.48, 0.18))
+	_add_moon_disc(root)
+
+
+func _add_cloud_band(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> void:
+	var band := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	band.mesh = mesh
+	band.position = pos
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = color
+	material.emission_enabled = true
+	material.emission = Color(color.r, color.g, color.b)
+	material.emission_energy_multiplier = 0.18
+	band.material_override = material
+	parent.add_child(band)
+
+
+func _add_moon_disc(parent: Node3D) -> void:
+	var moon := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 4.5
+	mesh.height = 9.0
+	mesh.radial_segments = 24
+	mesh.rings = 12
+	moon.mesh = mesh
+	moon.position = Vector3(-72.0, 48.0, -132.0)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(0.72, 0.78, 1.0)
+	material.emission_enabled = true
+	material.emission = Color(0.46, 0.56, 1.0)
+	material.emission_energy_multiplier = 0.52
+	moon.material_override = material
+	parent.add_child(moon)

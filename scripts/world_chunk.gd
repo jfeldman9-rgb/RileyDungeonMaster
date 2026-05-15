@@ -14,7 +14,9 @@ var torch_lights: Array[OmniLight3D] = []
 var atmosphere_motes: Array[MeshInstance3D] = []
 
 const STONE_TILE_A := preload("res://assets/generated/stone_tile_a.png")
+const STONE_TILE_B := preload("res://assets/generated/stone_tile_b.png")
 const STONE_TILE_C := preload("res://assets/generated/stone_tile_c.png")
+const STONE_TILE_D := preload("res://assets/generated/stone_tile_d.png")
 const BANNER_A := preload("res://assets/generated/banner_a.png")
 const BANNER_B := preload("res://assets/generated/banner_b.png")
 const BANNER_C := preload("res://assets/generated/banner_c.png")
@@ -68,8 +70,10 @@ func generate(coord: Vector2i, size: float, world_seed: int = 1337) -> void:
 	_configure_noise()
 	_build_terrain()
 	_build_path_marks()
+	_build_path_edge_details()
 	_build_foliage()
 	_build_scattered_adventure_props()
+	_build_valley_edge_silhouettes()
 	_build_atmosphere_motes()
 	_build_landmark_markers()
 
@@ -143,13 +147,28 @@ func _terrain_color(local_x: float, local_z: float, height: float) -> Color:
 	var world_z := local_z + position.z
 	var path_factor := 1.0 if _near_major_path(Vector3(world_x, 0.0, world_z), 3.8) else 0.0
 	if path_factor > 0.5:
-		return Color(0.22, 0.15, 0.09)
+		return _region_tinted_color(Vector3(world_x, 0.0, world_z), Color(0.22, 0.15, 0.09), 0.22)
 	var n := noise.get_noise_2d(world_x * 1.7 + 100.0, world_z * 1.7 - 80.0)
 	var low := Color(0.09, 0.18, 0.085)
 	var mid := Color(0.18, 0.31, 0.12)
 	var high := Color(0.28, 0.29, 0.18)
 	var t := clampf((height + 1.4) / 3.2 + n * 0.15, 0.0, 1.0)
-	return low.lerp(mid, clampf(t * 1.25, 0.0, 1.0)).lerp(high, maxf(0.0, t - 0.72) * 1.5)
+	var base := low.lerp(mid, clampf(t * 1.25, 0.0, 1.0)).lerp(high, maxf(0.0, t - 0.72) * 1.5)
+	return _region_tinted_color(Vector3(world_x, 0.0, world_z), base, 0.34)
+
+
+func _region_tinted_color(world_pos: Vector3, base: Color, strength: float) -> Color:
+	var result := base
+	for landmark in LANDMARKS:
+		var center: Vector3 = landmark["position"] as Vector3
+		var dist := Vector2(world_pos.x - center.x, world_pos.z - center.z).length()
+		var radius := 34.0 if str(landmark["kind"]) != "tower" else 44.0
+		if dist > radius:
+			continue
+		var tint: Color = landmark["color"] as Color
+		var influence := (1.0 - smoothstep(0.0, radius, dist)) * strength
+		result = result.lerp(tint.darkened(0.35), influence)
+	return result
 
 
 func _build_path_marks() -> void:
@@ -173,6 +192,34 @@ func _build_path_marks() -> void:
 				_add_torch(lantern_pos, Color(1.0, 0.52, 0.18))
 
 
+func _build_path_edge_details() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed + chunk_coord.x * 81001 + chunk_coord.y * 83003
+	for segment in PATH_SEGMENTS:
+		var from: Vector3 = segment[0]
+		var to: Vector3 = segment[1]
+		var length := from.distance_to(to)
+		var steps := maxi(2, int(length / 5.8))
+		var dir := (to - from).normalized()
+		var side_dir := Vector3(-dir.z, 0.0, dir.x)
+		for i in range(steps + 1):
+			var t := float(i) / float(steps)
+			var world_pos := from.lerp(to, t)
+			if not _contains_world_point(world_pos):
+				continue
+			var stagger := sin(t * TAU * 2.0 + float(chunk_coord.x - chunk_coord.y)) * 0.45
+			for side_index in [-1, 1]:
+				if rng.randf() > 0.58:
+					continue
+				var offset := side_dir * (float(side_index) * rng.randf_range(2.8, 4.6) + stagger)
+				var local := Vector3(world_pos.x - position.x + offset.x, 0.0, world_pos.z - position.z + offset.z)
+				local.y = sample_height(local.x, local.z) + 0.12
+				if rng.randf() < 0.52:
+					_add_waystone(local, rng.randf_range(0.45, 0.95), rng)
+				else:
+					_add_grass_tuft(local, rng.randf_range(0.8, 1.45), rng)
+
+
 func _add_path_slab(local_pos: Vector3, dir: Vector3, width: float) -> void:
 	var path := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
@@ -180,7 +227,7 @@ func _add_path_slab(local_pos: Vector3, dir: Vector3, width: float) -> void:
 	path.mesh = mesh
 	path.position = local_pos
 	path.rotation.y = atan2(dir.x, dir.z)
-	path.material_override = _make_path_material()
+	path.material_override = _make_path_material(local_pos)
 	add_child(path)
 
 
@@ -194,7 +241,7 @@ func _build_foliage() -> void:
 func _build_scattered_adventure_props() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed + chunk_coord.x * 31013 + chunk_coord.y * 41017
-	for i in range(18):
+	for i in range(26):
 		var lx := rng.randf_range(-chunk_size * 0.47, chunk_size * 0.47)
 		var lz := rng.randf_range(-chunk_size * 0.47, chunk_size * 0.47)
 		if _near_major_path(Vector3(lx + position.x, 0.0, lz + position.z), 3.2):
@@ -204,6 +251,35 @@ func _build_scattered_adventure_props() -> void:
 			_add_rock(Vector3(lx, sample_height(lx, lz) + 0.28 * scale, lz), scale, rng)
 		else:
 			_add_ruin_shard(Vector3(lx, sample_height(lx, lz) + 0.42 * scale, lz), scale, rng)
+
+
+func _build_valley_edge_silhouettes() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed + chunk_coord.x * 91009 + chunk_coord.y * 93001
+	var chunk_center := Vector3(position.x, 0.0, position.z)
+	var map_center := Vector3(0.0, 0.0, -42.0)
+	var dist_from_center := Vector2(chunk_center.x - map_center.x, chunk_center.z - map_center.z).length()
+	if dist_from_center < 66.0:
+		return
+	for i in range(8):
+		var local_angle := rng.randf_range(0.0, TAU)
+		var lx := cos(local_angle) * rng.randf_range(chunk_size * 0.18, chunk_size * 0.48)
+		var lz := sin(local_angle) * rng.randf_range(chunk_size * 0.18, chunk_size * 0.48)
+		var world := Vector3(lx + position.x, 0.0, lz + position.z)
+		if _near_major_path(world, 11.0):
+			continue
+		var height := rng.randf_range(3.0, 8.5)
+		var ridge := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = rng.randf_range(0.25, 0.75)
+		mesh.bottom_radius = rng.randf_range(1.6, 3.2)
+		mesh.height = height
+		mesh.radial_segments = 5
+		ridge.mesh = mesh
+		ridge.position = Vector3(lx, sample_height(lx, lz) + height * 0.5 - 0.25, lz)
+		ridge.rotation_degrees = Vector3(rng.randf_range(-8.0, 8.0), rng.randf_range(0.0, 360.0), rng.randf_range(-8.0, 8.0))
+		ridge.material_override = _make_stone_material(Color(0.12, 0.12, 0.13).lerp(Color(0.20, 0.18, 0.17), rng.randf()))
+		add_child(ridge)
 
 
 func _build_atmosphere_motes() -> void:
@@ -433,6 +509,7 @@ func _build_landmark(kind: String, landmark_name: String, world_pos: Vector3, co
 		_build_crypt_landmark(local_pos, color)
 	else:
 		_build_clearing_landmark(local_pos, color)
+	_add_landmark_label(local_pos + Vector3.UP * 4.8, landmark_name, color)
 
 
 func _build_clearing_landmark(center: Vector3, color: Color) -> void:
@@ -448,6 +525,7 @@ func _build_clearing_landmark(center: Vector3, color: Color) -> void:
 	add_child(ring)
 	_add_ground_glow(center, color, 0.38)
 	_add_moonbeam(center + Vector3.UP * 0.1, color)
+	_add_starting_clearing_frame(center)
 
 
 func _build_tower_landmark(center: Vector3, color: Color) -> void:
@@ -461,6 +539,7 @@ func _build_tower_landmark(center: Vector3, color: Color) -> void:
 	_add_banner(center + Vector3(3.0, 2.7, -4.4), BANNER_C)
 	_add_crystal_cluster(center + Vector3(0.0, 0.7, 4.2), color)
 	_add_moonbeam(center, color)
+	_add_ruined_arch(center + Vector3(0.0, 0.55, 7.4), 7.8, 4.8, color)
 	var light := OmniLight3D.new()
 	light.position = center + Vector3(0.0, 4.8, 0.0)
 	light.light_color = color
@@ -484,6 +563,7 @@ func _build_courtyard_landmark(center: Vector3, color: Color) -> void:
 	_add_banner(center + Vector3(3.2, 2.0, -5.05), BANNER_A)
 	_add_crystal_cluster(center + Vector3(0.0, 0.5, 0.0), Color(1.0, 0.65, 0.25))
 	_add_moonbeam(center, Color(1.0, 0.62, 0.22))
+	_add_ruined_arch(center + Vector3(0.0, 0.4, 6.3), 8.6, 3.8, Color(0.48, 0.40, 0.31))
 
 
 func _build_bridge_landmark(center: Vector3, color: Color) -> void:
@@ -493,6 +573,7 @@ func _build_bridge_landmark(center: Vector3, color: Color) -> void:
 		for z in [-4.8, 4.8]:
 			_add_column(center + Vector3(x, 1.05, z), 0.28, 2.1, color)
 			_add_torch(center + Vector3(x, 2.35, z), Color(0.95, 0.48, 0.22))
+	_add_waterfall_hint(center + Vector3(-5.8, 0.2, 0.0))
 
 
 func _build_library_landmark(center: Vector3, color: Color) -> void:
@@ -506,6 +587,7 @@ func _build_library_landmark(center: Vector3, color: Color) -> void:
 	_add_crystal_cluster(center + Vector3(-4.0, 0.45, 1.8), Color(0.35, 0.65, 1.0))
 	_add_crystal_cluster(center + Vector3(4.0, 0.45, 1.8), Color(0.35, 0.65, 1.0))
 	_add_moonbeam(center, Color(0.32, 0.48, 1.0))
+	_add_ruined_arch(center + Vector3(0.0, 0.45, 4.0), 6.8, 3.6, Color(0.24, 0.28, 0.48))
 
 
 func _build_garden_landmark(center: Vector3, color: Color) -> void:
@@ -540,6 +622,84 @@ func _build_crypt_landmark(center: Vector3, color: Color) -> void:
 	_add_banner(center + Vector3(0.0, 2.2, 1.0), BANNER_C)
 	_add_crystal_cluster(center + Vector3(0.0, 0.45, 3.2), Color(1.0, 0.72, 0.28))
 	_add_moonbeam(center, Color(1.0, 0.72, 0.28))
+	_add_ruined_arch(center + Vector3(0.0, 0.5, 5.0), 6.2, 3.9, Color(0.56, 0.42, 0.21))
+
+
+func _add_starting_clearing_frame(center: Vector3) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed + 120011
+	for i in range(18):
+		var angle := TAU * float(i) / 18.0
+		var radius := 7.5 + sin(float(i) * 1.7) * 1.2
+		var pos := center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		pos.y = sample_height(pos.x, pos.z)
+		if i % 3 == 0:
+			_add_rock(pos + Vector3.UP * 0.45, rng.randf_range(0.9, 1.65), rng)
+		else:
+			_add_tree(pos, rng.randf_range(1.0, 1.75), Color(0.035, 0.22, 0.065))
+	var arch_center := center + Vector3(0.0, 0.45, -7.8)
+	arch_center.y = sample_height(arch_center.x, arch_center.z) + 0.45
+	_add_ruined_arch(arch_center, 6.0, 3.4, Color(0.36, 0.31, 0.25))
+	for step in range(5):
+		var step_center := center + Vector3(0.0, 0.08 + float(step) * 0.035, -2.4 - float(step) * 1.1)
+		step_center.y = sample_height(step_center.x, step_center.z) + 0.08 + float(step) * 0.035
+		_add_box(step_center, Vector3(4.8 - float(step) * 0.25, 0.12, 0.65), Color(0.25, 0.22, 0.18))
+
+
+func _add_ruined_arch(center: Vector3, width: float, height: float, color: Color) -> void:
+	var side_x := width * 0.5
+	_add_box(center + Vector3(-side_x, height * 0.5, 0.0), Vector3(0.58, height, 0.72), color)
+	_add_box(center + Vector3(side_x, height * 0.5, 0.0), Vector3(0.58, height * 0.82, 0.72), color.darkened(0.04))
+	_add_box(center + Vector3(0.0, height, 0.0), Vector3(width + 1.0, 0.55, 0.72), color.lightened(0.04))
+	_add_box(center + Vector3(-side_x - 0.35, 0.25, 0.45), Vector3(1.1, 0.5, 1.2), color.darkened(0.12))
+	_add_box(center + Vector3(side_x + 0.35, 0.18, -0.45), Vector3(1.0, 0.36, 1.0), color.darkened(0.10))
+
+
+func _add_waterfall_hint(local_pos: Vector3) -> void:
+	var fall := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(1.4, 4.6, 0.08)
+	fall.mesh = mesh
+	fall.position = local_pos + Vector3.UP * 2.1
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.36, 0.68, 0.88, 0.42)
+	material.emission_enabled = true
+	material.emission = Color(0.14, 0.38, 0.62)
+	material.emission_energy_multiplier = 0.22
+	material.roughness = 0.18
+	fall.material_override = material
+	add_child(fall)
+
+
+func _add_waystone(local_pos: Vector3, scale: float, rng: RandomNumberGenerator) -> void:
+	var stone := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.34, rng.randf_range(0.75, 1.45), 0.22) * scale
+	stone.mesh = mesh
+	stone.position = local_pos + Vector3.UP * (mesh.size.y * 0.5)
+	stone.rotation_degrees = Vector3(rng.randf_range(-5.0, 5.0), rng.randf_range(0.0, 360.0), rng.randf_range(-4.0, 4.0))
+	stone.material_override = _make_stone_material(Color(0.22, 0.20, 0.18))
+	add_child(stone)
+	if rng.randf() < 0.38:
+		var rune := OmniLight3D.new()
+		rune.position = stone.position + Vector3.UP * (mesh.size.y * 0.34)
+		rune.light_color = Color(0.55, 0.68, 1.0)
+		rune.light_energy = 0.12
+		rune.omni_range = 3.0
+		add_child(rune)
+
+
+func _add_grass_tuft(local_pos: Vector3, scale: float, rng: RandomNumberGenerator) -> void:
+	for i in range(4):
+		var blade := MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(0.055, rng.randf_range(0.35, 0.7), 0.055) * scale
+		blade.mesh = mesh
+		blade.position = local_pos + Vector3(rng.randf_range(-0.25, 0.25), mesh.size.y * 0.5, rng.randf_range(-0.25, 0.25))
+		blade.rotation_degrees = Vector3(rng.randf_range(-12.0, 12.0), rng.randf_range(0.0, 360.0), rng.randf_range(-12.0, 12.0))
+		blade.material_override = _make_material(Color(0.11, 0.30, 0.09), 0.96)
+		add_child(blade)
 
 
 func _add_box(center: Vector3, size: Vector3, color: Color) -> void:
@@ -693,6 +853,19 @@ func _add_banner(local_pos: Vector3, texture: Texture2D) -> void:
 	add_child(banner)
 
 
+func _add_landmark_label(local_pos: Vector3, text: String, color: Color) -> void:
+	var label := Label3D.new()
+	label.text = text
+	label.position = local_pos
+	label.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	label.font_size = 32
+	label.pixel_size = 0.018
+	label.modulate = color.lightened(0.42)
+	label.outline_size = 8
+	label.outline_modulate = Color(0.02, 0.015, 0.03, 0.92)
+	add_child(label)
+
+
 func _make_terrain_material() -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.vertex_color_use_as_albedo = true
@@ -701,18 +874,21 @@ func _make_terrain_material() -> StandardMaterial3D:
 	return material
 
 
-func _make_path_material() -> StandardMaterial3D:
+func _make_path_material(local_pos: Vector3 = Vector3.ZERO) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.31, 0.22, 0.14)
-	material.albedo_texture = STONE_TILE_C
-	material.roughness = 0.9
+	var n: float = abs(sin(local_pos.x * 0.31 + local_pos.z * 0.17 + float(chunk_coord.x * 13 + chunk_coord.y * 7)))
+	material.albedo_color = Color(0.27, 0.19, 0.12).lerp(Color(0.38, 0.29, 0.19), n * 0.45)
+	material.albedo_texture = STONE_TILE_C if n < 0.5 else STONE_TILE_D
+	material.roughness = 0.84
+	material.metallic = 0.0
 	return material
 
 
 func _make_stone_material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color.lightened(0.08)
-	material.albedo_texture = STONE_TILE_A
+	var brightness := (color.r + color.g + color.b) / 3.0
+	material.albedo_texture = STONE_TILE_A if brightness < 0.42 else STONE_TILE_B
 	material.roughness = 0.78
 	material.metallic = 0.02
 	return material

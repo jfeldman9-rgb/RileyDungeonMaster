@@ -2,13 +2,13 @@ extends Node3D
 class_name CameraRig
 
 @export var target_path: NodePath
-@export var follow_distance := 11.4
-@export var follow_height := 7.35
-@export var look_ahead := 5.6
-@export var smoothing := 8.0
+@export var follow_distance := 13.2
+@export var follow_height := 8.35
+@export var look_ahead := 7.2
+@export var smoothing := 8.6
 @export var rotate_speed := 1.65
-@export var portrait_height_bonus := 4.8
-@export var portrait_distance_bonus := 5.2
+@export var portrait_height_bonus := 5.6
+@export var portrait_distance_bonus := 6.6
 
 var yaw := 0.0
 var target: Node3D

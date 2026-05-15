@@ -50,11 +50,12 @@ func _apply_lighting() -> void:
 	var daylight := clampf(sin(angle), 0.0, 1.0)
 	if sun:
 		sun.rotation_degrees = Vector3(-15.0 - daylight * 70.0, time_of_day * 360.0, 0.0)
-		sun.light_energy = lerpf(0.05, 1.15, daylight)
+		sun.light_energy = lerpf(0.12, 1.72, daylight)
+		sun.light_color = Color(1.0, 0.72 + daylight * 0.1, 0.42 + daylight * 0.12)
 		sun.visible = daylight > 0.03
 	if moon:
 		moon.rotation_degrees = Vector3(-75.0, time_of_day * 360.0 + 180.0, 0.0)
-		moon.light_energy = lerpf(0.45, 0.08, daylight)
+		moon.light_energy = lerpf(0.58, 0.12, daylight)
 		moon.visible = daylight < 0.8
 
 
