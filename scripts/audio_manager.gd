@@ -42,6 +42,7 @@ func _exit_tree() -> void:
 	for player in [music_player, combat_player, ambient_player, sfx_player]:
 		if player:
 			player.stop()
+			player.stream = null
 
 
 func _make_player(player_name: String, volume_db: float) -> AudioStreamPlayer:
