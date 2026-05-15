@@ -14,6 +14,7 @@ var ambient_player: AudioStreamPlayer
 var sfx_player: AudioStreamPlayer
 var enemy_manager: Node
 var combat_intensity := 0.0
+var combat_hold_timer := 0.0
 var connected_scene: Node
 
 
@@ -93,8 +94,10 @@ func set_combat_active(active: bool) -> void:
 func _process(delta: float) -> void:
 	if not connected_scene:
 		_connect_scene_signals()
+	if combat_hold_timer > 0.0:
+		combat_hold_timer = maxf(0.0, combat_hold_timer - delta)
 	if enemy_manager and enemy_manager.has_method("active_count"):
-		combat_intensity = 1.0 if int(enemy_manager.call("active_count")) > 0 else 0.0
+		combat_intensity = 1.0 if int(enemy_manager.call("active_count")) > 0 or combat_hold_timer > 0.0 else 0.0
 	if combat_player:
 		var target_db := combat_volume_db if combat_intensity > 0.5 else -80.0
 		combat_player.volume_db = lerpf(combat_player.volume_db, target_db, minf(1.0, fade_speed * delta))
@@ -165,6 +168,7 @@ func _on_seal_pickup(_seal_id: String) -> void:
 
 
 func _on_shield_hit(_remaining: int) -> void:
+	combat_hold_timer = 8.0
 	play_sfx("shield_crack")
 
 
@@ -178,6 +182,7 @@ func _on_player_damaged(new_health: int) -> void:
 
 
 func _on_boss_gate_opened() -> void:
+	combat_hold_timer = 5.0
 	play_sfx("boss_phase")
 
 
