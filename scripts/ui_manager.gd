@@ -198,7 +198,7 @@ func _build_adventure_frames() -> void:
 	row.add_child(stats)
 	var name_label := _make_label("RILEY", 14, Color(0.74, 0.92, 1.0))
 	stats.add_child(name_label)
-	heart_label = _make_label("<3 <3 <3 <3 <3", 18, Color(1.0, 0.22, 0.18))
+	heart_label = _make_label("♥ ♥ ♥ ♥ ♥", 18, Color(1.0, 0.22, 0.18))
 	stats.add_child(heart_label)
 	var stamina := ProgressBar.new()
 	stamina.custom_minimum_size = Vector2(112, 12)
@@ -327,7 +327,7 @@ func _on_player_damaged(_new_health: int) -> void:
 		var hearts := ""
 		var max_hearts := int(state.get("max_health")) if state else 5
 		for i in range(max_hearts):
-			hearts += "<3 " if i < _new_health else "-- "
+			hearts += "♥ " if i < _new_health else "♡ "
 		heart_label.text = hearts.strip_edges()
 	if _new_health <= 0:
 		show_message("RILEY DOWN", "Retreat to the clearing and try again.")
