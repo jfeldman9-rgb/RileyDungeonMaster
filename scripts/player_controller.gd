@@ -117,7 +117,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if move.length() > 0.05:
 		facing_direction = move.normalized()
-		rotation.y = lerp_angle(rotation.y, atan2(facing_direction.x, facing_direction.z), minf(1.0, 18.0 * delta))
+		rotation.y = lerp_angle(rotation.y, _yaw_for_forward_direction(facing_direction), minf(1.0, 18.0 * delta))
 	rotation.z = lerpf(rotation.z, -input.x * 0.06, minf(1.0, 12.0 * delta))
 	if state == State.DASHING:
 		dash_trail_timer -= delta
@@ -136,6 +136,11 @@ func _update_painted_facing() -> void:
 	var facing_camera := facing_direction.dot(camera_forward) < -0.15
 	painted_sprite.texture = RILEY_FRONT if facing_camera else RILEY_BACK
 	painted_sprite.modulate = Color(1.0, 1.0, 1.0, 0.74 if facing_camera else 0.62)
+
+
+func _yaw_for_forward_direction(direction: Vector3) -> float:
+	# Riley's model faces local -Z, which is Godot's conventional forward axis.
+	return atan2(-direction.x, -direction.z)
 
 
 func update_state_timers(delta: float) -> void:
