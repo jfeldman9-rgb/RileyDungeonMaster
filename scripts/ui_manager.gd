@@ -3,6 +3,9 @@ class_name UIManager
 
 const RILEY_PORTRAIT := preload("res://assets/generated/riley_portrait.png")
 const KENZIE_PORTRAIT := preload("res://assets/generated/kenzie_portrait.png")
+const SLASH_FX := preload("res://assets/generated/slash_fx.png")
+const DASH_SWIRL := preload("res://assets/generated/dash_swirl.png")
+const BROCCOLI_IMPACT := preload("res://assets/generated/broccoli_impact.png")
 
 @export var state_path: NodePath
 
@@ -216,8 +219,9 @@ func _build_adventure_frames() -> void:
 	var action_row := HBoxContainer.new()
 	action_row.add_theme_constant_override("separation", 8)
 	action_panel.add_child(action_row)
-	for label_text in ["SLICE", "DASH", "STAR"]:
-		action_row.add_child(_make_action_chip(label_text))
+	action_row.add_child(_make_action_chip("SLICE", SLASH_FX))
+	action_row.add_child(_make_action_chip("DASH", DASH_SWIRL))
+	action_row.add_child(_make_action_chip("STAR", BROCCOLI_IMPACT))
 
 	var boss_panel := PanelContainer.new()
 	boss_panel.name = "BossBanner"
@@ -242,14 +246,23 @@ func _build_adventure_frames() -> void:
 	boss_box.add_child(gate_progress)
 
 
-func _make_action_chip(text: String) -> Control:
+func _make_action_chip(text: String, texture: Texture2D) -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(96, 62)
 	panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.08, 0.055, 0.11, 0.88), Color(1.0, 1.0, 1.0, 0.18)))
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 1)
+	panel.add_child(box)
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.custom_minimum_size = Vector2(36, 30)
+	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	box.add_child(icon)
 	var label := _make_label(text, 13, Color(0.94, 0.92, 1.0))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	panel.add_child(label)
+	box.add_child(label)
 	return panel
 
 
