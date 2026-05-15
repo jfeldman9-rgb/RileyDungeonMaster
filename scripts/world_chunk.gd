@@ -250,6 +250,7 @@ func _add_path_slab(local_pos: Vector3, dir: Vector3, width: float) -> void:
 
 
 func _build_foliage() -> void:
+	_build_contact_shadow_multimesh()
 	_build_tree_multimesh()
 	_build_grass_multimesh()
 	_build_flower_multimesh()
@@ -385,6 +386,11 @@ func _build_tree_multimesh() -> void:
 	crown_mesh.bottom_radius = 1.05
 	crown_mesh.height = 2.9
 	crown_mesh.radial_segments = 9
+	var crown_top_mesh := CylinderMesh.new()
+	crown_top_mesh.top_radius = 0.0
+	crown_top_mesh.bottom_radius = 0.68
+	crown_top_mesh.height = 1.9
+	crown_top_mesh.radial_segments = 9
 	var trunk_mm := MultiMesh.new()
 	trunk_mm.mesh = trunk_mesh
 	trunk_mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -393,6 +399,10 @@ func _build_tree_multimesh() -> void:
 	crown_mm.mesh = crown_mesh
 	crown_mm.transform_format = MultiMesh.TRANSFORM_3D
 	crown_mm.instance_count = tree_count
+	var crown_top_mm := MultiMesh.new()
+	crown_top_mm.mesh = crown_top_mesh
+	crown_top_mm.transform_format = MultiMesh.TRANSFORM_3D
+	crown_top_mm.instance_count = tree_count
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed + chunk_coord.x * 13007 + chunk_coord.y * 17011
 	for i in range(tree_count):
@@ -410,6 +420,9 @@ func _build_tree_multimesh() -> void:
 		crown_t.basis = crown_t.basis.rotated(Vector3.UP, yaw)
 		trunk_mm.set_instance_transform(i, trunk_t)
 		crown_mm.set_instance_transform(i, crown_t)
+		var crown_top_t := Transform3D(Basis().scaled(Vector3(scale * rng.randf_range(0.72, 1.05), scale * rng.randf_range(0.75, 1.1), scale * rng.randf_range(0.72, 1.05))), Vector3(lx, ground + 3.65 * scale, lz))
+		crown_top_t.basis = crown_top_t.basis.rotated(Vector3.UP, yaw + rng.randf_range(-0.35, 0.35))
+		crown_top_mm.set_instance_transform(i, crown_top_t)
 	var trunk_inst := MultiMeshInstance3D.new()
 	trunk_inst.name = "TreeTrunks"
 	trunk_inst.multimesh = trunk_mm
@@ -420,6 +433,44 @@ func _build_tree_multimesh() -> void:
 	crown_inst.multimesh = crown_mm
 	crown_inst.material_override = _make_material(Color(0.045, 0.19, 0.065), 0.92)
 	add_child(crown_inst)
+	var crown_top_inst := MultiMeshInstance3D.new()
+	crown_top_inst.name = "TreeCrownsUpper"
+	crown_top_inst.multimesh = crown_top_mm
+	crown_top_inst.material_override = _make_material(Color(0.07, 0.25, 0.085), 0.9)
+	add_child(crown_top_inst)
+
+
+func _build_contact_shadow_multimesh() -> void:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.62
+	mesh.bottom_radius = 0.62
+	mesh.height = 0.01
+	mesh.radial_segments = 18
+	var count := 78
+	var mm := MultiMesh.new()
+	mm.mesh = mesh
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = count
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed + chunk_coord.x * 97001 + chunk_coord.y * 99007
+	for i in range(count):
+		var lx := rng.randf_range(-chunk_size * 0.49, chunk_size * 0.49)
+		var lz := rng.randf_range(-chunk_size * 0.49, chunk_size * 0.49)
+		if _near_major_path(Vector3(lx + position.x, 0.0, lz + position.z), 2.2):
+			lx += rng.randf_range(3.0, 7.0)
+		var scale := rng.randf_range(0.75, 2.8)
+		var t := Transform3D(Basis().scaled(Vector3(scale * rng.randf_range(1.1, 1.9), 1.0, scale * rng.randf_range(0.7, 1.25))), Vector3(lx, sample_height(lx, lz) + 0.025, lz))
+		t.basis = t.basis.rotated(Vector3.UP, rng.randf_range(0.0, TAU))
+		mm.set_instance_transform(i, t)
+	var inst := MultiMeshInstance3D.new()
+	inst.name = "PaintedContactShadows"
+	inst.multimesh = mm
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.0, 0.0, 0.0, 0.24)
+	material.roughness = 1.0
+	inst.material_override = material
+	add_child(inst)
 
 
 func _build_grass_multimesh() -> void:

@@ -10,6 +10,7 @@ class_name AudioManager
 
 var music_player: AudioStreamPlayer
 var combat_player: AudioStreamPlayer
+var ambient_player: AudioStreamPlayer
 var sfx_player: AudioStreamPlayer
 var combat_intensity := 0.0
 var connected_scene: Node
@@ -22,17 +23,21 @@ func _ready() -> void:
 		music_player = _make_player("AdventureMusic", music_volume_db)
 	if not combat_player:
 		combat_player = _make_player("CombatLayer", -80.0)
+	if not ambient_player:
+		ambient_player = _make_player("ValleyAmbience", -25.0)
 	if not sfx_player:
 		sfx_player = _make_player("SfxPlayer", sfx_volume_db)
 	music_player.stream = make_music_stream()
 	combat_player.stream = make_combat_stream()
+	ambient_player.stream = make_wind_stream()
 	music_player.play()
 	combat_player.play()
+	ambient_player.play()
 	call_deferred("_connect_scene_signals")
 
 
 func _exit_tree() -> void:
-	for player in [music_player, combat_player, sfx_player]:
+	for player in [music_player, combat_player, ambient_player, sfx_player]:
 		if player:
 			player.stop()
 
@@ -188,6 +193,33 @@ func make_combat_stream() -> AudioStreamWAV:
 		110.0, 0.0, 196.0, 146.83, 110.0, 0.0, 98.0, 0.0
 	]
 	return make_wave_stream(pulse, 0.16, -0.56, true, 0.42)
+
+
+func make_wind_stream() -> AudioStreamWAV:
+	var sample_rate := 22050
+	var seconds := 9.0
+	var frames := int(sample_rate * seconds)
+	var data := PackedByteArray()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 88137
+	var drift := 0.0
+	for i in range(frames):
+		var t := float(i) / float(sample_rate)
+		drift = lerpf(drift, rng.randf_range(-1.0, 1.0), 0.012)
+		var wave := sin(t * TAU * 0.18) * 0.35 + sin(t * TAU * 0.07 + 1.6) * 0.45
+		var amp := (drift * 0.22 + wave * 0.18) * 0.045
+		var sample := clampi(int(amp * 32767.0), -32768, 32767)
+		if sample < 0:
+			sample = 65536 + sample
+		data.append(sample & 0xff)
+		data.append((sample >> 8) & 0xff)
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = data
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	return stream
 
 
 func make_sfx_stream(kind: String) -> AudioStreamWAV:
