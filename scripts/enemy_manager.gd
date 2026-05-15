@@ -143,26 +143,70 @@ func _damage_player() -> void:
 func make_placeholder_enemy() -> Node3D:
 	var enemy := Node3D.new()
 	enemy.name = "PooledEnemyPlaceholder"
+	var stalk_mat := _make_enemy_material(Color(0.36, 0.42, 0.16), Color(0.08, 0.18, 0.04), 0.22)
+	var floret_mat := _make_enemy_material(Color(0.12, 0.42, 0.13), Color(0.02, 0.22, 0.04), 0.42)
+
+	for i in range(3):
+		var leg := MeshInstance3D.new()
+		leg.name = "MonsterLeg%d" % i
+		var leg_mesh := CylinderMesh.new()
+		leg_mesh.top_radius = 0.07
+		leg_mesh.bottom_radius = 0.1
+		leg_mesh.height = 0.62
+		leg_mesh.radial_segments = 7
+		leg.mesh = leg_mesh
+		var angle := TAU * float(i) / 3.0
+		leg.position = Vector3(cos(angle) * 0.22, 0.32, sin(angle) * 0.22)
+		leg.rotation_degrees = Vector3(14.0, rad_to_deg(angle), 0.0)
+		leg.material_override = stalk_mat
+		enemy.add_child(leg)
+
 	var body := MeshInstance3D.new()
 	body.name = "MonsterCore"
 	var mesh := SphereMesh.new()
-	mesh.radius = 0.42
-	mesh.height = 0.84
+	mesh.radius = 0.46
+	mesh.height = 0.72
+	mesh.radial_segments = 12
+	mesh.rings = 6
 	body.mesh = mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.18, 0.52, 0.16)
-	material.emission_enabled = true
-	material.emission = Color(0.08, 0.35, 0.08)
-	material.emission_energy_multiplier = 0.35
-	body.material_override = material
-	body.position.y = 0.5
+	body.material_override = floret_mat
+	body.position.y = 0.82
 	enemy.add_child(body)
+
+	for i in range(6):
+		var bulb := MeshInstance3D.new()
+		bulb.name = "MonsterFloret%d" % i
+		var bulb_mesh := SphereMesh.new()
+		bulb_mesh.radius = 0.18 + float(i % 3) * 0.035
+		bulb_mesh.height = bulb_mesh.radius * 1.7
+		bulb_mesh.radial_segments = 9
+		bulb_mesh.rings = 5
+		bulb.mesh = bulb_mesh
+		var angle := TAU * float(i) / 6.0
+		bulb.position = Vector3(cos(angle) * 0.34, 1.0 + sin(float(i) * 1.4) * 0.13, sin(angle) * 0.26)
+		bulb.material_override = floret_mat
+		enemy.add_child(bulb)
+
+	var eye_mat := _make_enemy_material(Color(0.95, 0.95, 0.7), Color(0.75, 1.0, 0.22), 1.2)
+	for x in [-0.13, 0.13]:
+		var eye := MeshInstance3D.new()
+		eye.name = "MonsterEye"
+		var eye_mesh := SphereMesh.new()
+		eye_mesh.radius = 0.045
+		eye_mesh.height = 0.09
+		eye_mesh.radial_segments = 8
+		eye_mesh.rings = 4
+		eye.mesh = eye_mesh
+		eye.position = Vector3(x, 0.88, -0.42)
+		eye.material_override = eye_mat
+		enemy.add_child(eye)
+
 	var card := Sprite3D.new()
 	card.name = "MonsterCard"
 	card.texture = BROCCOLI_BRUTE
 	card.pixel_size = 0.0042
-	card.position.y = 1.15
-	card.modulate = Color(1, 1, 1, 0.96)
+	card.position = Vector3(0.0, 1.2, 0.12)
+	card.modulate = Color(1, 1, 1, 0.72)
 	card.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	enemy.add_child(card)
 	var glow := OmniLight3D.new()
@@ -173,6 +217,16 @@ func make_placeholder_enemy() -> Node3D:
 	glow.omni_range = 3.4
 	enemy.add_child(glow)
 	return enemy
+
+
+func _make_enemy_material(albedo: Color, emission: Color, energy: float) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = albedo
+	material.roughness = 0.66
+	material.emission_enabled = true
+	material.emission = emission
+	material.emission_energy_multiplier = energy
+	return material
 
 
 func _configure_enemy_for_zone(enemy: Node3D, zone_name: String) -> void:

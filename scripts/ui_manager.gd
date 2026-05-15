@@ -9,6 +9,7 @@ const KENZIE_PORTRAIT := preload("res://assets/generated/kenzie_portrait.png")
 var state: Node
 var score_label: Label
 var health_label: Label
+var heart_label: Label
 var seal_label: Label
 var region_label: Label
 var objective_label: Label
@@ -87,6 +88,7 @@ func _build_hud() -> void:
 	message_label.offset_bottom = 190
 	message_label.modulate.a = 0.0
 	add_child(message_label)
+	_build_adventure_frames()
 	_build_story_panel()
 
 
@@ -153,6 +155,95 @@ func _build_portraits() -> void:
 	add_child(kenzie)
 
 
+func _build_adventure_frames() -> void:
+	var portrait_panel := PanelContainer.new()
+	portrait_panel.name = "AdventurePortraitPanel"
+	portrait_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	portrait_panel.offset_left = 18
+	portrait_panel.offset_right = 254
+	portrait_panel.offset_top = -112
+	portrait_panel.offset_bottom = -18
+	portrait_panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.01, 0.012, 0.018, 0.76), Color(0.78, 0.86, 1.0, 0.28)))
+	add_child(portrait_panel)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	portrait_panel.add_child(row)
+
+	var portrait := TextureRect.new()
+	portrait.texture = RILEY_PORTRAIT
+	portrait.custom_minimum_size = Vector2(76, 76)
+	portrait.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(portrait)
+
+	var stats := VBoxContainer.new()
+	stats.add_theme_constant_override("separation", 6)
+	row.add_child(stats)
+	var name_label := _make_label("RILEY", 14, Color(0.74, 0.92, 1.0))
+	stats.add_child(name_label)
+	heart_label = _make_label("<3 <3 <3 <3 <3", 18, Color(1.0, 0.22, 0.18))
+	stats.add_child(heart_label)
+	var stamina := ProgressBar.new()
+	stamina.custom_minimum_size = Vector2(112, 12)
+	stamina.max_value = 100
+	stamina.value = 72
+	stamina.show_percentage = false
+	stats.add_child(stamina)
+
+	var action_panel := PanelContainer.new()
+	action_panel.name = "ActionPanel"
+	action_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	action_panel.offset_left = -342
+	action_panel.offset_right = -18
+	action_panel.offset_top = -100
+	action_panel.offset_bottom = -18
+	action_panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.012, 0.014, 0.022, 0.72), Color(0.95, 0.82, 1.0, 0.25)))
+	add_child(action_panel)
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override("separation", 8)
+	action_panel.add_child(action_row)
+	for label_text in ["SLICE", "DASH", "STAR"]:
+		action_row.add_child(_make_action_chip(label_text))
+
+	var boss_panel := PanelContainer.new()
+	boss_panel.name = "BossBanner"
+	boss_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	boss_panel.offset_left = 390
+	boss_panel.offset_right = -390
+	boss_panel.offset_top = 18
+	boss_panel.offset_bottom = 58
+	boss_panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.025, 0.012, 0.032, 0.72), Color(0.85, 0.35, 1.0, 0.35)))
+	add_child(boss_panel)
+	var boss_text := _make_label("KENZIE TOWER", 15, Color(1.0, 0.82, 1.0))
+	boss_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	boss_panel.add_child(boss_text)
+
+
+func _make_action_chip(text: String) -> Control:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(96, 62)
+	panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.08, 0.055, 0.11, 0.88), Color(1.0, 1.0, 1.0, 0.18)))
+	var label := _make_label(text, 13, Color(0.94, 0.92, 1.0))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	panel.add_child(label)
+	return panel
+
+
+func _make_panel_style(bg: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	return style
+
+
 func show_message(_title: String, _subtitle: String = "") -> void:
 	if not message_label:
 		return
@@ -189,6 +280,12 @@ func _on_player_damaged(_new_health: int) -> void:
 	if health_label:
 		var max_health := int(state.get("max_health")) if state else 5
 		health_label.text = "Health %d/%d" % [_new_health, max_health]
+	if heart_label:
+		var hearts := ""
+		var max_hearts := int(state.get("max_health")) if state else 5
+		for i in range(max_hearts):
+			hearts += "<3 " if i < _new_health else "-- "
+		heart_label.text = hearts.strip_edges()
 	if _new_health <= 0:
 		show_message("RILEY DOWN", "Retreat to the clearing and try again.")
 	else:

@@ -4,10 +4,13 @@ class_name PlayerController
 const NinjaStarProjectileScript := preload("res://scripts/ninja_star_projectile.gd")
 const SLASH_FX := preload("res://assets/generated/slash_fx.png")
 const DASH_SWIRL := preload("res://assets/generated/dash_swirl.png")
+const RILEY_BACK := preload("res://assets/generated/riley_back.png")
+const RILEY_FRONT := preload("res://assets/generated/riley_front.png")
 
 signal slice_requested
 signal dash_requested
 signal star_requested
+signal enemy_sliced(position: Vector3)
 signal state_changed(new_state: State)
 
 enum State { IDLE, RUNNING, ATTACKING, DASHING, THROWING }
@@ -31,11 +34,13 @@ var dash_timer := 0.0
 var action_timer := 0.0
 var dash_trail_timer := 0.0
 var sword_light: OmniLight3D
+var painted_sprite: Sprite3D
 
 
 func _ready() -> void:
 	floor_snap_length = 0.45
 	sword_light = find_child("SwordLight", true, false) as OmniLight3D
+	painted_sprite = find_child("PaintedBack", true, false) as Sprite3D
 
 
 func set_camera_yaw(next_yaw: float) -> void:
@@ -83,7 +88,17 @@ func _physics_process(delta: float) -> void:
 		if dash_trail_timer <= 0.0:
 			dash_trail_timer = 0.055
 			_spawn_dash_afterimage()
+	_update_painted_facing()
 	_update_sword_light(delta)
+
+
+func _update_painted_facing() -> void:
+	if not painted_sprite:
+		return
+	var camera_forward := Vector3(sin(camera_yaw), 0.0, -cos(camera_yaw)).normalized()
+	var facing_camera := facing_direction.dot(camera_forward) < -0.15
+	painted_sprite.texture = RILEY_FRONT if facing_camera else RILEY_BACK
+	painted_sprite.modulate = Color(1.0, 1.0, 1.0, 0.74 if facing_camera else 0.62)
 
 
 func update_state_timers(delta: float) -> void:
@@ -151,6 +166,7 @@ func _apply_slice_hit() -> void:
 		if facing_direction.dot(to_enemy.normalized()) < slice_arc_dot:
 			continue
 		_spawn_hit_pop(enemy_3d.global_position + Vector3.UP * 0.65)
+		enemy_sliced.emit(enemy_3d.global_position)
 		enemy_3d.queue_free()
 		_add_score(15)
 		break

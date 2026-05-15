@@ -10,6 +10,10 @@ const STONE_TILE_B := preload("res://assets/generated/stone_tile_b.png")
 @export var ui_path: NodePath
 @export var collect_radius := 2.2
 
+signal seal_pickup_collected(seal_id: String)
+signal kenzie_shield_hit(remaining: int)
+signal kenzie_saved
+
 const SEAL_DEFS := {
 	"library": {"name": "Moon Library Seal", "position": Vector3(-62.0, 1.0, -34.0), "color": Color(0.35, 0.55, 1.0)},
 	"garden": {"name": "Poison Garden Seal", "position": Vector3(58.0, 1.0, -26.0), "color": Color(0.38, 1.0, 0.28)},
@@ -357,6 +361,7 @@ func _add_column(parent: Node, center: Vector3, radius: float, height: float, co
 
 func _collect_seal(seal_id: String, pickup: Node3D) -> void:
 	pickup.visible = false
+	seal_pickup_collected.emit(seal_id)
 	if state and state.has_method("collect_seal"):
 		state.call("collect_seal", seal_id)
 	if state and state.has_method("seal_count") and int(state.call("seal_count")) >= 3:
@@ -396,10 +401,12 @@ func _on_player_slice() -> void:
 	if player_flat.distance_to(tower_flat) > 11.0:
 		return
 	boss_shield_hp = maxi(0, boss_shield_hp - 1)
+	kenzie_shield_hit.emit(boss_shield_hp)
 	if ui:
 		ui.show_message("SHIELD HIT", "%d/5 shield layers remain." % boss_shield_hp)
 	if boss_shield_hp <= 0:
 		boss_active = false
+		kenzie_saved.emit()
 		for visual in kenzie_shield_visuals:
 			if is_instance_valid(visual):
 				visual.visible = false

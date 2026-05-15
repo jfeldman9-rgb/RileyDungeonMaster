@@ -12,6 +12,7 @@ var generated := false
 var noise := FastNoiseLite.new()
 var torch_lights: Array[OmniLight3D] = []
 var atmosphere_motes: Array[MeshInstance3D] = []
+var animated_landmark_nodes: Array[Node3D] = []
 
 const STONE_TILE_A := preload("res://assets/generated/stone_tile_a.png")
 const STONE_TILE_B := preload("res://assets/generated/stone_tile_b.png")
@@ -57,6 +58,16 @@ func _process(_delta: float) -> void:
 		var base_pos := mote.get_meta("base_pos", mote.position) as Vector3
 		var phase := float(mote.get_meta("phase", 0.0))
 		mote.position = base_pos + Vector3(sin(time * 0.8 + phase) * 0.18, sin(time * 1.15 + phase) * 0.08, cos(time * 0.7 + phase) * 0.18)
+	for node in animated_landmark_nodes:
+		if not is_instance_valid(node):
+			continue
+		var speed := float(node.get_meta("spin_speed", 0.35))
+		node.rotate_y(_delta * speed)
+		var bob := float(node.get_meta("bob", 0.0))
+		if bob > 0.0:
+			var base_y := float(node.get_meta("base_y", node.position.y))
+			var phase := float(node.get_meta("phase", 0.0))
+			node.position.y = base_y + sin(time * 1.4 + phase) * bob
 
 
 func generate(coord: Vector2i, size: float, world_seed: int = 1337) -> void:
@@ -523,6 +534,27 @@ func _build_clearing_landmark(center: Vector3, color: Color) -> void:
 	ring.rotation_degrees.x = 90.0
 	ring.material_override = _make_emissive_material(color, 0.18)
 	add_child(ring)
+	_register_animatable(ring, 0.32, 0.0)
+	var inner_ring := MeshInstance3D.new()
+	var inner_mesh := TorusMesh.new()
+	inner_mesh.inner_radius = 2.7
+	inner_mesh.outer_radius = 2.78
+	inner_mesh.ring_segments = 42
+	inner_ring.mesh = inner_mesh
+	inner_ring.position = center + Vector3.UP * 0.085
+	inner_ring.rotation_degrees.x = 90.0
+	inner_ring.material_override = _make_emissive_material(color.lightened(0.18), 0.38)
+	add_child(inner_ring)
+	_register_animatable(inner_ring, -0.52, 0.0)
+	for i in range(8):
+		var spoke := MeshInstance3D.new()
+		var spoke_mesh := BoxMesh.new()
+		spoke_mesh.size = Vector3(0.08, 0.035, 3.3)
+		spoke.mesh = spoke_mesh
+		spoke.position = center + Vector3.UP * 0.1
+		spoke.rotation_degrees = Vector3(0.0, float(i) * 45.0, 0.0)
+		spoke.material_override = _make_emissive_material(color.lightened(0.1), 0.26)
+		add_child(spoke)
 	_add_ground_glow(center, color, 0.38)
 	_add_moonbeam(center + Vector3.UP * 0.1, color)
 	_add_starting_clearing_frame(center)
@@ -775,12 +807,21 @@ func _add_crystal_cluster(local_pos: Vector3, color: Color) -> void:
 		crystal.rotation_degrees = Vector3(randf_range(-8.0, 8.0), float(i) * 43.0, randf_range(-8.0, 8.0))
 		crystal.material_override = _make_emissive_material(color, 0.75)
 		add_child(crystal)
+		_register_animatable(crystal, 0.18 + float(i) * 0.035, 0.035)
 	var light := OmniLight3D.new()
 	light.position = local_pos + Vector3.UP * 0.9
 	light.light_color = color
 	light.light_energy = 0.8
 	light.omni_range = 6.0
 	add_child(light)
+
+
+func _register_animatable(node: Node3D, spin_speed: float, bob: float) -> void:
+	node.set_meta("spin_speed", spin_speed)
+	node.set_meta("bob", bob)
+	node.set_meta("base_y", node.position.y)
+	node.set_meta("phase", randf() * TAU)
+	animated_landmark_nodes.append(node)
 
 
 func _add_torch(local_pos: Vector3, color: Color) -> void:
