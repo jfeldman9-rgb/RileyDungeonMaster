@@ -9,6 +9,8 @@ class_name CameraRig
 @export var rotate_speed := 1.65
 @export var portrait_height_bonus := 5.6
 @export var portrait_distance_bonus := 6.6
+@export var landscape_fov := 62.0
+@export var portrait_fov := 68.0
 
 var yaw := 0.0
 var target: Node3D
@@ -42,4 +44,5 @@ func _process(delta: float) -> void:
 	var height := follow_height + (portrait_height_bonus if portrait else 0.0)
 	var desired := target.global_position - forward * distance + Vector3.UP * height
 	global_position = global_position.lerp(desired, minf(1.0, smoothing * delta))
-	camera.look_at(target.global_position + forward * look_ahead + Vector3.UP)
+	camera.fov = lerpf(camera.fov, portrait_fov if portrait else landscape_fov, minf(1.0, 3.0 * delta))
+	camera.look_at(target.global_position + forward * look_ahead + Vector3.UP * 1.35)
