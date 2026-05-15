@@ -486,6 +486,8 @@ func _on_player_slice() -> void:
 	kenzie_shield_hit.emit(boss_shield_hp)
 	if ui:
 		ui.show_message("SHIELD HIT", "%d/5 shield layers remain." % boss_shield_hp)
+		if ui.has_method("set_boss_status"):
+			ui.call("set_boss_status", "KENZIE, DUNGEON MASTER", boss_shield_hp, 5)
 	if boss_shield_hp <= 0:
 		boss_active = false
 		kenzie_saved.emit()
