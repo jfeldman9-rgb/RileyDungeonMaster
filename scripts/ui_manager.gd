@@ -14,6 +14,7 @@ var seal_label: Label
 var region_label: Label
 var objective_label: Label
 var message_label: Label
+var gate_progress: ProgressBar
 var story_panel: PanelContainer
 var story_title: Label
 var story_body: Label
@@ -217,7 +218,16 @@ func _build_adventure_frames() -> void:
 	add_child(boss_panel)
 	var boss_text := _make_label("KENZIE TOWER", 15, Color(1.0, 0.82, 1.0))
 	boss_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	boss_panel.add_child(boss_text)
+	var boss_box := VBoxContainer.new()
+	boss_box.add_theme_constant_override("separation", 3)
+	boss_panel.add_child(boss_box)
+	boss_box.add_child(boss_text)
+	gate_progress = ProgressBar.new()
+	gate_progress.custom_minimum_size = Vector2(320, 9)
+	gate_progress.max_value = 3
+	gate_progress.value = 0
+	gate_progress.show_percentage = false
+	boss_box.add_child(gate_progress)
 
 
 func _make_action_chip(text: String) -> Control:
@@ -309,3 +319,5 @@ func _refresh_seals() -> void:
 	var count := int(state.call("seal_count")) if state.has_method("seal_count") else 0
 	var gate := "Open" if count >= 3 else "Locked"
 	seal_label.text = "Seals %d/3    Kenzie Gate: %s" % [count, gate]
+	if gate_progress:
+		gate_progress.value = count

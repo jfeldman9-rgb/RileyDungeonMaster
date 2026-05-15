@@ -11,6 +11,7 @@ class_name WorldChunk
 var generated := false
 var noise := FastNoiseLite.new()
 var torch_lights: Array[OmniLight3D] = []
+var torch_flames: Array[MeshInstance3D] = []
 var atmosphere_motes: Array[MeshInstance3D] = []
 var animated_landmark_nodes: Array[Node3D] = []
 
@@ -52,6 +53,12 @@ func _process(_delta: float) -> void:
 		var phase := float(light.get_meta("phase", 0.0))
 		var base := float(light.get_meta("base_energy", 1.0))
 		light.light_energy = base + sin(time * 7.0 + phase) * 0.18 + sin(time * 13.0 + phase * 0.7) * 0.08
+	for flame in torch_flames:
+		if not is_instance_valid(flame):
+			continue
+		var phase := float(flame.get_meta("phase", 0.0))
+		var pulse := 1.0 + sin(time * 10.0 + phase) * 0.12 + sin(time * 17.0 + phase) * 0.05
+		flame.scale = Vector3(0.85 + pulse * 0.15, 1.05 + pulse * 0.22, 0.85 + pulse * 0.15)
 	for mote in atmosphere_motes:
 		if not is_instance_valid(mote):
 			continue
@@ -851,6 +858,8 @@ func _add_torch(local_pos: Vector3, color: Color) -> void:
 	flame.mesh = flame_mesh
 	flame.position = local_pos + Vector3.UP * 0.28
 	flame.material_override = _make_emissive_material(color, 1.35)
+	flame.set_meta("phase", randf() * TAU)
+	torch_flames.append(flame)
 	add_child(flame)
 	var light := OmniLight3D.new()
 	light.position = local_pos + Vector3.UP * 0.3

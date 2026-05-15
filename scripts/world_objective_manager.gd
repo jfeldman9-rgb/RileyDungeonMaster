@@ -3,6 +3,9 @@ class_name WorldObjectiveManager
 
 const KENZIE_FRONT := preload("res://assets/generated/kenzie_front.png")
 const BROCCOLI_SHIELD := preload("res://assets/generated/broccoli_shield.png")
+const BROCCOLI_A := preload("res://assets/generated/broccoli_a.png")
+const BROCCOLI_B := preload("res://assets/generated/broccoli_b.png")
+const BROCCOLI_C := preload("res://assets/generated/broccoli_c.png")
 const STONE_TILE_A := preload("res://assets/generated/stone_tile_a.png")
 const STONE_TILE_B := preload("res://assets/generated/stone_tile_b.png")
 
@@ -42,6 +45,7 @@ var boss_shield_hp := 5
 var kenzie_avatar: Node3D
 var kenzie_shield: Node3D
 var kenzie_shield_visuals: Array[Node3D] = []
+var kenzie_orbiters: Array[Node3D] = []
 var water_segments: Array[MeshInstance3D] = []
 
 
@@ -192,7 +196,9 @@ func _build_distant_kenzie_tower() -> void:
 	shield_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	tower.add_child(shield_sprite)
 	kenzie_shield_visuals.append(shield_sprite)
+	_add_boss_orbiters(tower, kenzie.position)
 	_add_kenzie_aura(tower)
+	_add_tower_sky_beam(tower)
 	var light := OmniLight3D.new()
 	light.position = Vector3(0.0, 7.5, -1.5)
 	light.light_color = Color(0.75, 0.28, 1.0)
@@ -215,6 +221,45 @@ func _build_distant_kenzie_tower() -> void:
 	beacon.light_energy = 4.8
 	beacon.omni_range = 56.0
 	tower.add_child(beacon)
+
+
+func _add_boss_orbiters(parent: Node3D, center: Vector3) -> void:
+	var textures := [BROCCOLI_A, BROCCOLI_B, BROCCOLI_C]
+	for i in range(10):
+		var orbiter := Sprite3D.new()
+		orbiter.name = "KenzieBroccoliOrbiter"
+		orbiter.texture = textures[i % textures.size()]
+		orbiter.pixel_size = 0.012 + float(i % 3) * 0.0015
+		orbiter.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+		orbiter.modulate = Color(0.86, 1.0, 0.72, 0.92)
+		orbiter.set_meta("center", center)
+		orbiter.set_meta("phase", TAU * float(i) / 10.0)
+		orbiter.set_meta("radius", 2.3 + float(i % 4) * 0.45)
+		orbiter.set_meta("height", 0.4 + sin(float(i)) * 1.2)
+		parent.add_child(orbiter)
+		kenzie_orbiters.append(orbiter)
+
+
+func _add_tower_sky_beam(parent: Node3D) -> void:
+	var beam := MeshInstance3D.new()
+	beam.name = "KenzieSkyBeam"
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 1.3
+	mesh.bottom_radius = 0.38
+	mesh.height = 58.0
+	mesh.radial_segments = 24
+	beam.mesh = mesh
+	beam.position = Vector3(0.0, 31.0, -1.5)
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(0.72, 0.28, 1.0, 0.18)
+	material.emission_enabled = true
+	material.emission = Color(0.62, 0.18, 1.0)
+	material.emission_energy_multiplier = 0.62
+	beam.material_override = material
+	parent.add_child(beam)
+	kenzie_shield_visuals.append(beam)
 
 
 func _add_kenzie_aura(parent: Node3D) -> void:
@@ -426,6 +471,17 @@ func _update_boss_visuals(delta: float) -> void:
 			visual.rotate_y(delta * (1.2 + float(5 - boss_shield_hp) * 0.4))
 	if kenzie_avatar:
 		kenzie_avatar.position.y = 7.4 + sin(Time.get_ticks_msec() * 0.003) * 0.18
+	var time := Time.get_ticks_msec() * 0.001
+	for orbiter in kenzie_orbiters:
+		if not is_instance_valid(orbiter):
+			continue
+		var center := orbiter.get_meta("center", Vector3.ZERO) as Vector3
+		var phase := float(orbiter.get_meta("phase", 0.0))
+		var radius := float(orbiter.get_meta("radius", 2.8))
+		var height := float(orbiter.get_meta("height", 0.0))
+		var angle := time * 0.9 + phase
+		orbiter.position = center + Vector3(cos(angle) * radius, height + sin(time * 1.6 + phase) * 0.4, sin(angle) * radius)
+		orbiter.rotation_degrees.z += delta * 110.0
 
 
 func _update_region_label() -> void:
